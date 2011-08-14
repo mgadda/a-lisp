@@ -20,7 +20,7 @@ functions =
 
 special_operators =
   QUOTE: (arg)->
-    args
+    arg
 
 symbols = {}
 

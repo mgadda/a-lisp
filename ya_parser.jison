@@ -2,6 +2,7 @@
 %%
 
 ";".*                   {/* comment */}
+"'"                     {return 'SINGLE_QUOTE';}
 "("                     {return '(';}
 ")"                     {return ')';}
 [-+]?[0-9]+\.[0-9]*     {return 'FLOAT';}           
@@ -41,6 +42,7 @@ sexpressions:     sexpression              { $$ = [$1]; yy.record($$); }
   
 sexpression:  list                         { $$ = $1; }
   |           atom                         { $$ = $1; }
+  |           SINGLE_QUOTE sexpression     { $$ = ['QUOTE', $2];}
   ;
     
 list:         '(' elements ')'             { $$ = $2; }
@@ -66,7 +68,7 @@ literal:      STRING
   |           OCT_INTEGER                  { $$ = parseInt($1.split('o').pop(), 8);}     // For Base64: new Buffer($1, 'base64').toString()
   ;
   
-symbol:       IDENTIFIER                   { $$ = $1.toUpperCase();}
+symbol:       IDENTIFIER                   { $$ = $1.toUpperCase(); }
   ;
 
 %%

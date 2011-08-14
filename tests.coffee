@@ -24,6 +24,10 @@ equal -0.32498, ya.parse('-0.32498')
 
 deepEqual [['+', '-0.234324', '10']], ya.parse('(+ -0.234324 10)')
 
+deepEqual [['QUOTE', 'A']], ya.parse("'a")
+deepEqual [['QUOTE', ['QUOTE', 'A']]], ya.parse("''a")
+
+
 # Eval'er
 equal 3, ya.eval(ya.parse('(+ 1 2)')[0])
 equal 32, ya.eval(ya.parse('(+ 1 #x1f)')[0])
@@ -34,3 +38,6 @@ equal Math.E, ya.eval(ya.parse('E')[0])
 equal 'T', ya.eval(ya.parse('T')[0])
 equal 'NIL', ya.eval(ya.parse('NIL')[0])
 equal 'NIL', ya.eval(ya.parse('()')[0])
+
+equal 'A', ya.eval(ya.parse('(quote a)')[0])
+deepEqual ['QUOTE', 'A'], ya.eval(ya.parse('(quote (quote a))')[0])
