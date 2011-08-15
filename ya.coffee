@@ -18,10 +18,37 @@ functions =
     sum += arg for arg in args when typeof arg == 'number'
     sum
 
+  CONS: (first, rest)->
+    throw {message: "wrong number of arguments to CONS"} if arguments.length != 2
+    
+    if rest instanceof Array
+      rest.unshift(first)
+    else
+      rest = [first, rest]
+
+    rest
+  
 special_operators =
   QUOTE: (arg)->
+    return 'NIL' if arg.length == 0
     arg
+  CAR: (arg)->
+    car = _eval(arg)
+    throw {message: "CAR: #{arg} is not a list"} unless (car instanceof Array || car == 'NIL')
 
+    if car instanceof Array and car.length > 0
+      return car.shift()
+
+    'NIL'
+      
+  CDR: (arg)->
+    cdr = _eval(arg)
+    
+    return cdr if cdr == 'NIL'
+    
+    if cdr instanceof Array and cdr.length > 0
+      return cdr[1..]
+    
 symbols = {}
 
 const_symbols = 

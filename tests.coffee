@@ -41,3 +41,21 @@ equal 'NIL', ya.eval(ya.parse('()')[0])
 
 equal 'A', ya.eval(ya.parse('(quote a)')[0])
 deepEqual ['QUOTE', 'A'], ya.eval(ya.parse('(quote (quote a))')[0])
+#deepEqual ['QUOTE', 'NIL'], ya.eval(ya.parse("''()")[0])
+
+
+equal 'A', ya.eval(ya.parse("(car (quote (a b c)))")[0])
+equal 'A', ya.eval(ya.parse("(car '(a b c))")[0])
+deepEqual ['B', 'C'], ya.eval(ya.parse("(cdr '(a b c))")[0])
+
+equal 'NIL', ya.eval(ya.parse("(car ())")[0])
+equal 'NIL', ya.eval(ya.parse("'()")[0])
+equal 'NIL', ya.eval(ya.parse("(car '())")[0])
+equal 'NIL', ya.eval(ya.parse("(cdr ())")[0])
+
+deepEqual ['A', 'B', 'C'], ya.eval(ya.parse('(cons (quote a) (quote (b c))) = (a b c)')[0])
+
+
+deepEqual [ 'A', 'B' ], ya.eval(ya.parse("(cons 'a 'b)")[0])
+deepEqual [ [ 'A', 'B' ], 'B' ], ya.eval(ya.parse("(cons '(a b) 'b)")[0])
+deepEqual [ [ 'A', 'B' ], 'B', 'C' ], ya.eval(ya.parse("(cons '(a b) '(b c))")[0])
