@@ -27,6 +27,10 @@ functions =
       rest = [first, rest]
 
     rest
+  EQUAL: (left, right)->
+    return 'T' if left == right
+    'NIL'
+  EQ: (args)-> functions.EQUAL(args...)
   
 special_operators =
   QUOTE: (arg)->

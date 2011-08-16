@@ -53,9 +53,22 @@ equal 'NIL', ya.eval(ya.parse("'()")[0])
 equal 'NIL', ya.eval(ya.parse("(car '())")[0])
 equal 'NIL', ya.eval(ya.parse("(cdr ())")[0])
 
+# CONS
 deepEqual ['A', 'B', 'C'], ya.eval(ya.parse('(cons (quote a) (quote (b c))) = (a b c)')[0])
-
-
 deepEqual [ 'A', 'B' ], ya.eval(ya.parse("(cons 'a 'b)")[0])
 deepEqual [ [ 'A', 'B' ], 'B' ], ya.eval(ya.parse("(cons '(a b) 'b)")[0])
 deepEqual [ [ 'A', 'B' ], 'B', 'C' ], ya.eval(ya.parse("(cons '(a b) '(b c))")[0])
+
+# EQUAL
+deepEqual 'T', ya.eval(ya.parse("(equal (car (quote (a b))) (quote a))")[0])
+# TODO: make equal a deep traversal of equality, not just javascript's === operator
+# deepEqual 'T', ya.eval(ya.parse("(equal '(a b c) '(a b c))")[0])
+# deepEqual 'NIL', ya.eval(ya.parse("(equal '(a b c) '(a b))")[0])
+
+# LAMBDA 
+equal 5, ya.eval(ya.parse("((lambda (x y) (+ x y)) 2 3)")[0])
+deepEqual ['A', 'D'], ya.eval(ya.parse("((lambda (x y) (cons (car x) y)) (quote (a b)) (cdr (quote (c d))))")[0])
+
+
+
+
