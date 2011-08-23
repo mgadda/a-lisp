@@ -20,10 +20,14 @@ read = ->
     input += term
 
     if nestedCount is 0 and (term[term.length-1] is "\n" or term[term.length-1] is "\r") and !input.match(/^[\n\r]+$/)
+
       try        
-        ya.print(ya.eval(sexp)) for sexp in ya.parse(input)
+        #ya.print(ya.eval.call(ya.env, sexp)) for sexp in ya.parse(input)
+        ya.print(ya.stack.call(ya.eval, sexp)) for sexp in ya.parse(input)
       catch e        
         console.log e
+        console.log e.stack
+        console.log e.yaStack if e.yaStack?
       finally
         input = ""
         process.stdout.write '> '

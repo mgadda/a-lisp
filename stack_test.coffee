@@ -24,6 +24,7 @@ equal 1, stack.environments.length
 
 # Test variable shadowing
 
+stack = new Stack({f: 80})
 inner = ->
   equal 60, this.get('f')
   this.bind('f', 70)

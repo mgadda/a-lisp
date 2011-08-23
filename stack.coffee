@@ -1,3 +1,5 @@
+util = require 'util'
+
 exports.StackFrame = class StackFrame
 
   constructor: (previousFrame, initialEnv={}) ->
@@ -7,13 +9,12 @@ exports.StackFrame = class StackFrame
   get: (symbol)->
     # try to get symbol from this frame
     # then ask previousFrame to try
-    
     if @bindings[symbol]?
       return @bindings[symbol]
     else if @previousFrame?
       return @previousFrame.get(symbol)
     else
-      throw "undefined symbol #{symbol}"
+      null
 
   bind: (name, value)->
     @bindings[name] = value
@@ -21,16 +22,23 @@ exports.StackFrame = class StackFrame
 exports.Stack = class Stack
 
   constructor: (initialEnv) ->
-    @environments = [new StackFrame(null, initialEnv)]
+    @frames = [new StackFrame(null, initialEnv)]
   
   call: (func, args...)->
-    func.apply(this.newFrame(), args)
-    @environments.shift() unless @environments.length == 1
+    try
+      val = func.apply(this.newFrame(), args)
+    finally
+      @frames.shift() #unless @frames.length == 1
+      
+    return val;
     
   newFrame: ->
-    frame = new StackFrame(@environments[0])
-    @environments.unshift(frame)
+    frame = new StackFrame(@frames[0])
+    @frames.unshift(frame)
     return frame
     
   currentFrame: ->
-    @environments[0]
+    @frames[0]
+    
+  depth: ->
+    @frames.length
