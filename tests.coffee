@@ -78,6 +78,12 @@ deepEqual 'T', yaEval(ya.parse("(atom (car '(a b)))")[0])
 deepEqual 'NIL', yaEval(ya.parse("(atom (cdr '(a b)))")[0])
 
 # COND
+equal 'U', yaEval(ya.parse("(cond ('u))")[0])
+equal 'X', yaEval(ya.parse("(cond (t 'x))")[0])
+equal 'C', yaEval(ya.parse("(cond (t 'a 'b 'c))")[0])
+deepEqual ['B', 'C'], yaEval(ya.parse("(cond (t 'a '(b c)))")[0])
+equal 'B', yaEval(ya.parse('(cond ((atom (quote a)) (quote b)) ((quote t) (quote c)))')[0])
+equal 'A', yaEval(ya.parse("(cond ((atom '(a b)) t) ('a))")[0])
 
 # LAMBDA 
 deepEqual 10, yaEval(ya.parse('((lambda (x) x) 10)')[0])
@@ -85,6 +91,7 @@ equal 5, yaEval(ya.parse("((lambda (x y) (+ x y)) 2 3)")[0])
 deepEqual ['A', 'D'], yaEval(ya.parse("((lambda (x y) (cons (car x) y)) (quote (a b)) (cdr (quote (c d))))")[0])
 
 # LABEL
+
 
 
 

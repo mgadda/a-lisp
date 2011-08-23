@@ -88,7 +88,20 @@ special_operators =
       'NIL'
     else
       'T'
+  COND: (lists...)->  
+    #console.log "lists=" + util.inspect(lists)
+    
+    # multiple conditions    
+    # one condition 
+    
+    # default value w/o condition (length == 1)
+    # else nil
 
+    for list in lists
+      if _eval.call(this, list[0]) != 'NIL'
+        return _eval.call(this, list.pop())
+
+    return 'NIL'
 # Always executed in the context of a StackFrame    
 _eval = (sexp) ->
   throw {message: "this (#{util.inspect(this, false, 2)}) is not instanceof StackFrame"} if !(this instanceof StackFrame)
