@@ -1,5 +1,13 @@
 util = require 'util'
 
+desexpify = (sexp) ->
+  subexprs = [];
+  if(typeof(sexp) != 'object')
+    sexp;
+  else
+    expr = '(' + sexp.map((s)-> desexpify(s)).join(' ') + ')'
+
+
 exports.StackFrame = class StackFrame
 
   constructor: (previousFrame, initialEnv={}) ->
@@ -17,9 +25,20 @@ exports.StackFrame = class StackFrame
       null
 
   bind: (name, value)->
-    #console.log "BIND: #{name}, #{value} @ #{@stack.depth()}"
+    #console.log "BIND: #{name}, #{desexpify(value)} @ #{@stack.depth()}"
     @bindings[name] = value
+  
+  toString: (recursive=false)->
+    console.log "----------------------------------------"
+    for name,value of @bindings
+      if typeof(value) == 'function'
+        console.log "| #{name}\t\t\t| FUNCTION"
+      else
+        console.log "| #{name}\t\t\t| #{value}"
     
+    @previousFrame.toString() if recursive && @previousFrame?
+        
+      
 exports.Stack = class Stack
 
   constructor: (initialEnv) ->

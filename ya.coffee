@@ -135,6 +135,10 @@ special_operators =
       funcNames
     else
       traces
+  
+  "PRINT-STACK": ->
+    this.toString(true)
+    'NIL'
     
 # Always executed in the context of a StackFrame    
 __eval = (sexp) ->
@@ -151,7 +155,13 @@ __eval = (sexp) ->
     specialFunc = special_operators[sexp[0]] 
     
     if specialFunc?
+
       console.log "#{stack.depth()-1}. Trace: #{desexpify(sexp, sexp[1..])}" if (sexp[0] in traces)
+
+      # note that the call stack does not get pushed here
+      # that left up to the special operator to handle if needed
+      # in this way, special operators have access to the current stack frame
+      # where as regular functions do not
       value = specialFunc.apply(this, sexp[1..]) # no eval, let special operator handle that
       console.log "#{stack.depth()-1}. Trace: #{sexp[0]} ==> #{value}" if (sexp[0] in traces)
 
