@@ -90,7 +90,7 @@ deepEqual 10, yaEval(ya.parse('((lambda (x) x) 10)')[0])
 equal 5, yaEval(ya.parse("((lambda (x y) (+ x y)) 2 3)")[0])
 deepEqual ['A', 'D'], yaEval(ya.parse("((lambda (x y) (cons (car x) y)) (quote (a b)) (cdr (quote (c d))))")[0])
 
-# LABEL
+# LABEL and recursive functions
 equal 55, yaEval(ya.parse("""
 ((label fib (lambda (x) 
   (cond ((equal x 0) 0) 
@@ -98,5 +98,8 @@ equal 55, yaEval(ya.parse("""
         (t (+ (fib (+ x -1)) (fib (+ x -2))))))) 10)
 """)[0])
 
+# DEFUN
+yaEval(ya.parse("(defun sum-wonky (x y) (+ (+ x y) 1))")[0])
+equal 4, yaEval(ya.parse("(sum-wonky 1 2)")[0])
 
 
