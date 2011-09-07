@@ -14,8 +14,8 @@ exports.StackFrame = class StackFrame
 
   constructor: (previousFrame, initialEnv={vars:{}, funcs:{}}) ->
     @previousFrame = previousFrame
-    @bindings = initialEnv.vars
-    @funcBindings = initialEnv.funcs
+    @bindings = initialEnv.vars || {}
+    @funcBindings = initialEnv.funcs || {}
     
   get: (symbol)->
     # try to get symbol from this frame
