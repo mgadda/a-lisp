@@ -11,6 +11,8 @@ Y     Y  A A
 Welcome to Ya! 
 We'll be brief so you can get on with it.
 
-Copyright (c) 2011 Matt Gadda, 2011
+http://ya-lang.org
+
+Copyright (c) 2011 Matt Gadda
   
 """
