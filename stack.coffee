@@ -17,6 +17,7 @@ exports.StackFrame = class StackFrame
       null
 
   bind: (name, value)->
+    #console.log "BIND: #{name}, #{value} @ #{@stack.depth()}"
     @bindings[name] = value
     
 exports.Stack = class Stack
@@ -34,6 +35,7 @@ exports.Stack = class Stack
     
   newFrame: ->
     frame = new StackFrame(@frames[0])
+    frame.stack = this
     @frames.unshift(frame)
     return frame
     

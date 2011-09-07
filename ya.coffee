@@ -33,7 +33,6 @@ env =
   EQUAL: (left, right)->
     return 'T' if left == right
     'NIL'
-  EQ: (args)-> this.get("EQUAL")(args...)
   T: 'T'
   NIL: 'NIL'
   PI: Math.PI,
@@ -41,14 +40,12 @@ env =
 
 stack = new Stack(env)
 
-log = (msg, inspect=true)->
+log = (msg, obj)->
   tabs = ""
-  tabs += "  " for i in [1..stack.depth()]
-  if inspect
-    console.log tabs + util.inspect(msg, true, 10)
-  else
-    console.log tabs + msg
+  tabs += "  " for i in [0..stack.depth()]
+  console.log tabs + msg + util.inspect(obj, false, 3)
 
+traces = []
   
 special_operators =
   QUOTE: (arg)->
@@ -72,16 +69,16 @@ special_operators =
       return cdr[1..]
 
   LAMBDA: (parameterNames, body)->
-    log "paramNames:" + parameterNames
-    log "body:" + body
+    # log "LAMBDA paramNames:", parameterNames
+    # log "       body:", body
     # replace body's references to strings defined in parameterNames array
     # with arguments passed into resulting javascript function
     (args...)->
-      log args
-      this.bind(parameterNames.shift(), arg) for arg in args
+      #log "lambda invocation arg values: ", args
+      for idx in [0...args.length]
+        this.bind(parameterNames[idx], args[idx]) 
+        
       _eval.call(this, body)
-  
-  LABEL:(labelName, func)->
   
   ATOM:(symbol)->
     if (_eval.call(this,symbol) instanceof Array)
@@ -99,11 +96,36 @@ special_operators =
 
     for list in lists
       if _eval.call(this, list[0]) != 'NIL'
-        return _eval.call(this, list.pop())
+        return _eval.call(this, list[list.length-1])
 
     return 'NIL'
+    
+  LABEL: (name, lambda)->
+    # log "LABEL name:", name
+    # log "      body:", lambda
+    # 1. (f e1 e2 e3)
+    # 2. label is the same as lambda, but for 1.
+    lambdaFunc = _eval.call(this, lambda)
+    
+    (args...)->
+      # Bind this function so that it can be called by name (within scope such as down below)
+      this.bind(name, lambdaFunc)
+      
+      # Pass-through invocation from label's closure to lambda's closure
+      #lambdaFunc.apply(this, args)
+      args.unshift(name)
+      _eval.call(this, args) # ['fun', 100, 200]
+
+  TRACE: (funcNames...) ->
+    if funcNames.length > 0      
+      console.log ";; Tracing function #{desexpify(funcName)}" for funcName in funcNames
+      traces = traces.concat(funcName) for funcName in funcNames when (funcName not in traces)
+      funcNames
+    else
+      traces
+    
 # Always executed in the context of a StackFrame    
-_eval = (sexp) ->
+__eval = (sexp) ->
   throw {message: "this (#{util.inspect(this, false, 2)}) is not instanceof StackFrame"} if !(this instanceof StackFrame)
   
   if sexp instanceof Array # its a list form
@@ -117,18 +139,31 @@ _eval = (sexp) ->
     specialFunc = special_operators[sexp[0]] 
     
     if specialFunc?
-      return specialFunc.apply(this, sexp[1..]) # no eval, let special operator handle that
+      console.log "#{stack.depth()-1}. Trace: #{desexpify(sexp, sexp[1..])}" if (sexp[0] in traces)
+      value = specialFunc.apply(this, sexp[1..]) # no eval, let special operator handle that
+      console.log "#{stack.depth()-1}. Trace: #{sexp[0]} ==> #{value}" if (sexp[0] in traces)
+
+      return value
     
     # Macros
     
     # Regular Functions
     # eval first item in list, must be a function
+
     func = _eval.call(this, sexp[0])
     throw {message: "EVAL: undefined function #{sexp[0]}", yaStack: util.inspect(stack, false, 3)} unless func? and (typeof(func) == 'function')
     
     # eval its parts, apply the function to them
-    args = (_eval.call(this, arg) for arg in sexp[1..])
-    return stack.call(func, args...)
+    evald_args = (_eval.call(this, arg) for arg in sexp[1..])
+    
+    tmp = []
+    tmp.push sexp[0]
+    tmp = tmp.concat evald_args
+    
+    console.log "#{stack.depth()-1}. Trace: #{desexpify(tmp)}" if (sexp[0] in traces)
+    value = stack.call(func, evald_args...)
+    console.log "#{stack.depth()-1}. Trace: #{sexp[0]} ==> #{value}" if (sexp[0] in traces)
+    return value
     
   else # its an atom form
     
@@ -139,6 +174,7 @@ _eval = (sexp) ->
     # check if its a keyword :test
     # defines constant with name :test and value of :test
     # maybe self-evaluating literal such as "hello" or 10.523    
+
     if this.get(sexp)?
       return this.get(sexp)
     else if typeof sexp == 'string' and sexp.match(/:[^()"'`,:;\|\s]/) # keyword
@@ -148,13 +184,27 @@ _eval = (sexp) ->
     else if typeof sexp == 'number' # this is bad because it ties ya literals to js literals
       return sexp
       
-    throw {message: "variable #{util.inspect(sexp)} has no value"}
+    throw {message: "variable #{desexpify(sexp)} has no value"}
 
     
   #sexp    
-    
+
+_eval =(sexp) ->
+  ret = __eval.call(this, sexp)
+  #console.log "EVAL: #{desexpify(sexp)} ==> #{desexpify(ret)}}"  #util.inspect(sexp)
+  #log "RETURN: ",  #util.inspect(ret)
+  return ret
+
+desexpify =(sexp) ->
+  subexprs = [];
+  if(typeof(sexp) != 'object')
+    sexp;
+  else
+    expr = '(' + sexp.map((s)-> desexpify(s)).join(' ') + ')'
+  
 print = (sexp)  ->
-  console.log util.inspect(sexp, false, 4)
+  console.log desexpify(sexp)
+  #console.log util.inspect(sexp, false, 4)
   
 quote = (expr) ->
   expr

@@ -91,7 +91,12 @@ equal 5, yaEval(ya.parse("((lambda (x y) (+ x y)) 2 3)")[0])
 deepEqual ['A', 'D'], yaEval(ya.parse("((lambda (x y) (cons (car x) y)) (quote (a b)) (cdr (quote (c d))))")[0])
 
 # LABEL
-
+equal 55, yaEval(ya.parse("""
+((label fib (lambda (x) 
+  (cond ((equal x 0) 0) 
+        ((equal x 1) 1) 
+        (t (+ (fib (+ x -1)) (fib (+ x -2))))))) 10)
+""")[0])
 
 
 
