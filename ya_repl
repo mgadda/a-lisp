@@ -1,0 +1,3 @@
+#!/bin/bash
+
+rlwrap coffee ya_repl.coffee
