@@ -28,6 +28,7 @@ desexpify = (sexp) ->
   else
     expr = '(' + sexp.map((s)-> desexpify(s)).join(' ') + ')'
 
+
 env = 
   '+': (args...)->
     sum = 0
@@ -46,6 +47,9 @@ env =
   EQUAL: (left, right)->
     return 'T' if left == right
     'NIL'
+  DOCUMENTATION: (name, type)->
+    return documentation[type][name] if documentation[type]?
+    'NIL'
   T: 'T'
   NIL: 'NIL'
   PI: Math.PI,
@@ -53,7 +57,9 @@ env =
 
 stack = new Stack(env)
 traces = []
-  
+documentation = {}  
+
+
 special_operators =
   QUOTE: (arg)->
     return 'NIL' if arg.length == 0
@@ -127,7 +133,8 @@ special_operators =
 
   DEFUN: (name, parameterNames, body...)->
     # body may include optional documentation string
-    documentation = body.shift() if typeof(body[0]) == 'string'
+    documentation.FUNCTION ||= {}
+    documentation.FUNCTION[name] = body.shift() if typeof(body[0]) == 'string'
     this.previousFrame.bind(name, _eval.call(this, ['LAMBDA', parameterNames, body...]))
       
   TRACE: (funcNames...) ->
@@ -141,7 +148,7 @@ special_operators =
   "PRINT-STACK": ->
     this.toString(true)
     'NIL'
-    
+
 # Always executed in the context of a StackFrame    
 __eval = (sexp) ->
   throw {message: "this (#{util.inspect(this, false, 2)}) is not instanceof StackFrame"} if !(this instanceof StackFrame)

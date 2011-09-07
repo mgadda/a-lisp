@@ -102,4 +102,7 @@ equal 55, yaEval(ya.parse("""
 yaEval(ya.parse("(defun sum-wonky (x y) (+ (+ x y) 1))")[0])
 equal 4, yaEval(ya.parse("(sum-wonky 1 2)")[0])
 
+# DOCUMENTATION
+yaEval(ya.parse('(defun sum-wonky (x y) "Add two numbers incorrectly" (+ (+ x y) 1))')[0])
+equal '"Add two numbers incorrectly"', yaEval(ya.parse("(documentation 'sum-wonky 'function)")[0])
 
