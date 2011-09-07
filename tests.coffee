@@ -1,6 +1,7 @@
 ya = require './ya'
 
 {ok, deepEqual, equal} = require 'assert'
+{YaFunction} = require './function'
 
 # Test Parser
 deepEqual [[]], ya.parse('()')
@@ -98,6 +99,14 @@ equal 55, yaEval(ya.parse("""
         (t (+ (fib (+ x -1)) (fib (+ x -2))))))) 10)
 """)[0])
 
+# FUNCTION
+ok (yaEval(ya.parse('(function +)')[0]) instanceof YaFunction)
+equal '#<FUNCTION + (&rest values) >', yaEval(ya.parse('(function +)')[0])
+
+# APPLY 
+equal 60, yaEval(ya.parse("(apply (function +) '(10 20 30))")[0])
+equal 11, yaEval(ya.parse("(apply (lambda (x) (+ x 1)) '(10))")[0])
+
 # DEFUN
 yaEval(ya.parse("(defun sum-wonky (x y) (+ (+ x y) 1))")[0])
 equal 4, yaEval(ya.parse("(sum-wonky 1 2)")[0])
@@ -106,3 +115,31 @@ equal 4, yaEval(ya.parse("(sum-wonky 1 2)")[0])
 yaEval(ya.parse('(defun sum-wonky (x y) "Add two numbers incorrectly" (+ (+ x y) 1))')[0])
 equal '"Add two numbers incorrectly"', yaEval(ya.parse("(documentation 'sum-wonky 'function)")[0])
 
+# LIST
+deepEqual ['A', 'B', 'NIL', 'T'], yaEval(ya.parse("(list 'a 'b nil t)")[0])
+
+# Optional Arguments
+# deepEqual [1, 2, 'NIL', 'NIL'], yaEval(ya.parse("((lambda (a b &optional c d) (list a b c d)) 1 2)")[0])
+# 
+# yaEval(ya.parse("(defun opt-test (a b &optional c d) (list a b c d))")[0])
+# deepEqual [1, 2, 'NIL', 'NIL'], yaEval(ya.parse("(opt-test 1 2)")[0])
+# deepEqual [1, 2, 3, 'NIL'], yaEval(ya.parse("(opt-test 1 2 3)")[0])
+# deepEqual [1, 2, 3, 4], yaEval(ya.parse("(opt-test 1 2 3 4)")[0])
+# 
+# # Default values (of optional arguments)
+# yaEval(ya.parse("(defun foo (a &optional (b 10)) (list a b))")[0])
+# deepEqual [1, 10], yaEval(ya.parse("(foo 1)")[0])
+# deepEqual [1, 2], yaEval(ya.parse("(foo 1 2)")[0])
+# 
+# # Default values with caller supplied flag
+# yaEval(ya.parse("""(defun foo (a b &optional (c 3 c-supplied-p))
+#                      (list a b c c-supplied-p))""")[0])
+# deepEqual [1, 2, 3, "NIL"], yaEval(ya.parse("(foo 1 2)")[0])
+# deepEqual [1, 2, 3, 'T'], yaEval(ya.parse("(foo 1 2 3)")[0])
+# deepEqual [1, 2, 4, 'T'] yaEval(ya.parse("(foo 1 2 4)")[0])
+#   
+# # Rest parameters
+# deepEqual 15, yaEval(ya.parse("(defun test (a b &rest values) (apply #'+ a b values))"))
+# 
+# # Required parameters
+# # Name parameters

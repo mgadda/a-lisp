@@ -28,8 +28,8 @@ read = ->
         ya.print(ya.stack.call(ya.eval, sexp)) for sexp in ya.parse(input)
       catch e        
         console.log e
-        console.log e.stack
-        console.log e.yaStack if e.yaStack?
+        # console.log e.stack
+        # console.log e.yaStack if e.yaStack?
       finally
         input = ""
         process.stdout.write "[#{line++}]> "

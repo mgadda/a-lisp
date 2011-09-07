@@ -1,19 +1,22 @@
 util = require 'util'
+{YaFunction} = require './function'
 
 desexpify = (sexp) ->
   subexprs = [];
   if(typeof(sexp) != 'object')
     sexp;
+  else if sexp instanceof YaFunction
+    sexp.toString()
   else
-    expr = '(' + sexp.map((s)-> desexpify(s)).join(' ') + ')'
-
+    expr = '(' + sexp.map((s)-> desexpify(s)).join(' ') + ')' 
 
 exports.StackFrame = class StackFrame
 
-  constructor: (previousFrame, initialEnv={}) ->
+  constructor: (previousFrame, initialEnv={vars:{}, funcs:{}}) ->
     @previousFrame = previousFrame
-    @bindings = initialEnv
-
+    @bindings = initialEnv.vars
+    @funcBindings = initialEnv.funcs
+    
   get: (symbol)->
     # try to get symbol from this frame
     # then ask previousFrame to try
@@ -23,19 +26,30 @@ exports.StackFrame = class StackFrame
       return @previousFrame.get(symbol)
     else
       null
-
+  
+  getFunc:(symbol)->
+    if @funcBindings[symbol]?
+      return @funcBindings[symbol]
+    else if @previousFrame?
+      return @previousFrame.getFunc(symbol)
+    else
+      null
+    
   bind: (name, value)->
     #console.log "BIND: #{name}, #{desexpify(value)} @ #{@stack.depth()}"
     @bindings[name] = value
   
+  bindFunc: (funcObj)->
+    @funcBindings[funcObj.name] = funcObj
+    
   toString: (recursive=false)->
     console.log "----------------------------------------"
-    for name,value of @bindings
-      if typeof(value) == 'function'
-        console.log "| #{name}\t\t\t| FUNCTION"
-      else
-        console.log "| #{name}\t\t\t| #{value}"
-    
+    for name,value of @bindings        
+      console.log "| #{name}\t\t\t| #{value}"
+
+    for name,value of @funcBindings        
+      console.log "| #{name}\t\t\t| #{value.toString()}"
+      
     @previousFrame.toString() if recursive && @previousFrame?
         
       

@@ -2,6 +2,8 @@ sys = require 'sys'
 fs = require 'fs' 
 util = require 'util'
 
+{YaFunction} = require './function'
+
 yaParser = require('./ya_parser').parser
 
 {Stack, StackFrame} = require './stack'  
@@ -25,36 +27,65 @@ desexpify = (sexp) ->
   subexprs = [];
   if(typeof(sexp) != 'object')
     sexp;
+  else if sexp instanceof YaFunction
+    sexp.toString()
   else
     expr = '(' + sexp.map((s)-> desexpify(s)).join(' ') + ')'
 
 
-env = 
-  '+': (args...)->
-    sum = 0
-    sum += arg for arg in args when typeof arg == 'number'
-    sum
-
-  CONS: (first, rest)->
-    throw {message: "wrong number of arguments to CONS"} if arguments.length != 2
+env =
+  vars:
+    T: 'T'
+    NIL: 'NIL'
+    PI: Math.PI,
+    E: Math.E
+  funcs:
     
-    if rest instanceof Array
-      rest.unshift(first)
-    else
-      rest = [first, rest]
+    '+': new YaFunction( '+', ['&rest','values'], (args...)->
+      sum = 0
+      sum += arg for arg in args when typeof arg == 'number'
+      sum
+    )
+    CONS: new YaFunction('CONS', ['first','&rest','values'], (first, rest)->
+      throw {message: "wrong number of arguments to CONS"} if arguments.length != 2
+    
+      if rest instanceof Array
+        rest.unshift(first)
+      else
+        rest = [first, rest]
 
-    rest
-  EQUAL: (left, right)->
-    return 'T' if left == right
-    'NIL'
-  DOCUMENTATION: (name, type)->
-    return documentation[type][name] if documentation[type]?
-    'NIL'
-  T: 'T'
-  NIL: 'NIL'
-  PI: Math.PI,
-  E: Math.E
+      rest
+    )
+    EQUAL: new YaFunction('EQUAL', ['left', 'right'], (left, right)->
+      return 'T' if left == right
+      'NIL'
+    )
+    DOCUMENTATION: new YaFunction('DOCUMENTATION', ['name', 'type'], (name, type)->
+      return documentation[type][name] if documentation[type]?
+      'NIL'
+    )
+    LIST: new YaFunction('LIST', ['&rest', 'values'], (args...)->
+      args
+    )
+    APPLY: new YaFunction('APPLY', ['function', '&rest', 'values'], (funcObj, args...)->
+      # accepts YaFunction, then lose arguments followed by a list
+      # everything after YaFunction gets flattened and applied to YaFunction
+      throw {message: "APPLY: undefined function #{desexpify(funcObj)}"} if funcObj not instanceof YaFunction
 
+      argsToApply = []
+      for arg in args
+        argsToApply = argsToApply.concat(arg)
+        if arg instanceof Array        
+          break
+      
+      # big surprise here...
+      # we make a raw method invocatio here, because the stack
+      # was already pushed when APPLY was invoked, so there's no need to make
+      # the call on the stack, we can use the existing stack frame.
+      debugger      
+      return funcObj.callable.apply(this, argsToApply)
+      #return stack.call(funcObj.callable, argsToApply...)
+    ) 
 stack = new Stack(env)
 traces = []
 documentation = {}  
@@ -82,18 +113,19 @@ special_operators =
       return cdr[1..]
 
   LAMBDA: (parameterNames, body...)->
-    # log "LAMBDA paramNames:", parameterNames
-    # log "       body:", body
     # replace body's references to strings defined in parameterNames array
     # with arguments passed into resulting javascript function
-    (args...)->
+    new YaFunction('ANONYMOUS', parameterNames, (args...)->
       #log "lambda invocation arg values: ", args
       for idx in [0...args.length]
+        if parameterNames[idx] == '&optional'
+        else
         this.bind(parameterNames[idx], args[idx]) 
         
       for part in body 
         last_part = _eval.call(this, part)
       last_part        
+    )
   
   ATOM:(symbol)->
     if (_eval.call(this,symbol) instanceof Array)
@@ -116,26 +148,26 @@ special_operators =
     return 'NIL'
     
   LABEL: (name, lambda)->
-    # log "LABEL name:", name
-    # log "      body:", lambda
-    # 1. (f e1 e2 e3)
-    # 2. label is the same as lambda, but for 1.
-    lambdaFunc = _eval.call(this, lambda)
+    lambdaFuncObj = _eval.call(this, lambda)
     
-    (args...)->
+    new YaFunction(name, lambdaFuncObj.parameters, (args...)->
       # Bind this function so that it can be called by name (within scope such as down below)
-      this.bind(name, lambdaFunc)
+      lambdaFuncObj.name = name
+      this.bindFunc(lambdaFuncObj)
       
       # Pass-through invocation from label's closure to lambda's closure
-      #lambdaFunc.apply(this, args)
       args.unshift(name)
       _eval.call(this, args) # ['fun', 100, 200]
-
+    )
+    
   DEFUN: (name, parameterNames, body...)->
     # body may include optional documentation string
     documentation.FUNCTION ||= {}
-    documentation.FUNCTION[name] = body.shift() if typeof(body[0]) == 'string'
-    this.previousFrame.bind(name, _eval.call(this, ['LAMBDA', parameterNames, body...]))
+    documentation.FUNCTION[name] = body[0] if typeof(body[0]) == 'string'
+    funcObj = _eval.call(this, ['LAMBDA', parameterNames, body...])
+    funcObj.name = name # otherwise, it would be anonmyous, since we're just using lambda internally
+    this.previousFrame.bindFunc(funcObj)
+    name    
       
   TRACE: (funcNames...) ->
     if funcNames.length > 0      
@@ -144,7 +176,14 @@ special_operators =
       funcNames
     else
       traces
-  
+  FUNCTION: (name)->
+    # convert name to functor (typeof == function)
+    funcObj = this.getFunc(name)
+    if funcObj?
+      return funcObj
+    else
+      throw {message: "FUNCTION: undefined function #{name}"}
+        
   "PRINT-STACK": ->
     this.toString(true)
     'NIL'
@@ -177,11 +216,13 @@ __eval = (sexp) ->
       return value
     
     # Macros
+    # Not Yet Implemented :(
     
     # Regular Functions
-    # eval first item in list, must be a function
-
-    func = _eval.call(this, sexp[0])
+    # look for method named in sexp[0] in stack (e.g. foo)
+    # failing that, eval first item in list, must eval to function (e.g. (lambda (x) x))
+    funcObj = this.getFunc(sexp[0]) || _eval.call(this, sexp[0])
+    func = funcObj.callable if funcObj?
     throw {message: "EVAL: undefined function #{sexp[0]}", yaStack: util.inspect(stack, false, 3)} unless func? and (typeof(func) == 'function')
     
     # eval its parts, apply the function to them
@@ -221,8 +262,9 @@ __eval = (sexp) ->
   #sexp    
 
 _eval =(sexp) ->
+  #console.log "EVAL: #{desexpify(sexp)}"
   ret = __eval.call(this, sexp)
-  #console.log "EVAL: #{desexpify(sexp)} ==> #{desexpify(ret)}}"  #util.inspect(sexp)
+  #console.log "==> #{desexpify(ret)}"  #util.inspect(sexp)
   #log "RETURN: ",  #util.inspect(ret)
   return ret
   
