@@ -28,6 +28,8 @@ deepEqual [['+', '-0.234324', '10']], ya.parse('(+ -0.234324 10)')
 deepEqual [['QUOTE', 'A']], ya.parse("'a")
 deepEqual [['QUOTE', ['QUOTE', 'A']]], ya.parse("''a")
 
+deepEqual [['FUNCTION', 'A']], ya.parse("#'a")
+
 deepEqual ['LAMBDA', ['X'], 'X'], ya.parse('(lambda (x) x)')[0]
 deepEqual [['LAMBDA', ['X'], 'X'], 10], ya.parse('((lambda (x) x) 10)')[0]
 
@@ -106,6 +108,7 @@ equal '#<FUNCTION + (&rest values) >', yaEval(ya.parse('(function +)')[0])
 # APPLY 
 equal 60, yaEval(ya.parse("(apply (function +) '(10 20 30))")[0])
 equal 11, yaEval(ya.parse("(apply (lambda (x) (+ x 1)) '(10))")[0])
+equal 34, yaEval(ya.parse("(apply #'+ 4 '(10 20))")[0])
 
 # DEFUN
 yaEval(ya.parse("(defun sum-wonky (x y) (+ (+ x y) 1))")[0])

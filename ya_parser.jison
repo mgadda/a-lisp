@@ -2,6 +2,7 @@
 %%
 
 ";".*                   {/* comment */}
+"#'"                    {return 'FUNCTION';}
 "'"                     {return 'SINGLE_QUOTE';}
 "("                     {return '(';}
 ")"                     {return ')';}
@@ -43,6 +44,7 @@ sexpressions:     sexpression              { $$ = [$1]; yy.record($$); }
 sexpression:  list                         { $$ = $1; }
   |           atom                         { $$ = $1; }
   |           SINGLE_QUOTE sexpression     { $$ = ['QUOTE', $2];}
+  |           FUNCTION sexpression         { $$ = ['FUNCTION', $2];}
   ;
     
 list:         '(' elements ')'             { $$ = $2; }
