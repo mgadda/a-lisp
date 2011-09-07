@@ -75,7 +75,7 @@ special_operators =
     if cdr instanceof Array and cdr.length > 0
       return cdr[1..]
 
-  LAMBDA: (parameterNames, body)->
+  LAMBDA: (parameterNames, body...)->
     # log "LAMBDA paramNames:", parameterNames
     # log "       body:", body
     # replace body's references to strings defined in parameterNames array
@@ -85,7 +85,9 @@ special_operators =
       for idx in [0...args.length]
         this.bind(parameterNames[idx], args[idx]) 
         
-      _eval.call(this, body)
+      for part in body 
+        last_part = _eval.call(this, part)
+      last_part        
   
   ATOM:(symbol)->
     if (_eval.call(this,symbol) instanceof Array)
