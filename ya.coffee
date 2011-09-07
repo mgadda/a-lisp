@@ -125,6 +125,9 @@ special_operators =
       args.unshift(name)
       _eval.call(this, args) # ['fun', 100, 200]
 
+  DEFUN: (name, parameterNames, body...)->
+    this.previousFrame.bind(name, _eval.call(this, ['LAMBDA', parameterNames, body...]))
+      
   TRACE: (funcNames...) ->
     if funcNames.length > 0      
       console.log ";; Tracing function #{desexpify(funcName)}" for funcName in funcNames
