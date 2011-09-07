@@ -126,6 +126,8 @@ special_operators =
       _eval.call(this, args) # ['fun', 100, 200]
 
   DEFUN: (name, parameterNames, body...)->
+    # body may include optional documentation string
+    documentation = body.shift() if typeof(body[0]) == 'string'
     this.previousFrame.bind(name, _eval.call(this, ['LAMBDA', parameterNames, body...]))
       
   TRACE: (funcNames...) ->
