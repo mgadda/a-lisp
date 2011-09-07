@@ -15,6 +15,19 @@ parse = (str) ->
   
   ret
 
+log = (msg, obj)->
+  tabs = ""
+  tabs += "  " for i in [0..stack.depth()]
+  console.log tabs + msg + util.inspect(obj, false, 3)
+
+
+desexpify = (sexp) ->
+  subexprs = [];
+  if(typeof(sexp) != 'object')
+    sexp;
+  else
+    expr = '(' + sexp.map((s)-> desexpify(s)).join(' ') + ')'
+
 env = 
   '+': (args...)->
     sum = 0
@@ -39,12 +52,6 @@ env =
   E: Math.E
 
 stack = new Stack(env)
-
-log = (msg, obj)->
-  tabs = ""
-  tabs += "  " for i in [0..stack.depth()]
-  console.log tabs + msg + util.inspect(obj, false, 3)
-
 traces = []
   
 special_operators =
@@ -194,13 +201,6 @@ _eval =(sexp) ->
   #console.log "EVAL: #{desexpify(sexp)} ==> #{desexpify(ret)}}"  #util.inspect(sexp)
   #log "RETURN: ",  #util.inspect(ret)
   return ret
-
-desexpify =(sexp) ->
-  subexprs = [];
-  if(typeof(sexp) != 'object')
-    sexp;
-  else
-    expr = '(' + sexp.map((s)-> desexpify(s)).join(' ') + ')'
   
 print = (sexp)  ->
   console.log desexpify(sexp)
