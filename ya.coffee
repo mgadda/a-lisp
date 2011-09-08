@@ -118,8 +118,6 @@ special_operators =
     new YaFunction('ANONYMOUS', parameterNames, (args...)->
       #log "lambda invocation arg values: ", args
       for idx in [0...args.length]
-        if parameterNames[idx] == '&optional'
-        else
         this.bind(parameterNames[idx], args[idx]) 
         
       for part in body 

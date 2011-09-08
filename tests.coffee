@@ -123,7 +123,7 @@ deepEqual ['A', 'B', 'NIL', 'T'], yaEval(ya.parse("(list 'a 'b nil t)")[0])
 
 # Optional Arguments
 # deepEqual [1, 2, 'NIL', 'NIL'], yaEval(ya.parse("((lambda (a b &optional c d) (list a b c d)) 1 2)")[0])
-# 
+
 # yaEval(ya.parse("(defun opt-test (a b &optional c d) (list a b c d))")[0])
 # deepEqual [1, 2, 'NIL', 'NIL'], yaEval(ya.parse("(opt-test 1 2)")[0])
 # deepEqual [1, 2, 3, 'NIL'], yaEval(ya.parse("(opt-test 1 2 3)")[0])
@@ -144,5 +144,16 @@ deepEqual ['A', 'B', 'NIL', 'T'], yaEval(ya.parse("(list 'a 'b nil t)")[0])
 # # Rest parameters
 # deepEqual 15, yaEval(ya.parse("(defun test (a b &rest values) (apply #'+ a b values))"))
 # 
-# # Required parameters
-# # Name parameters
+# # Keyword parameters
+# deepEqual ['NIL', 'NIL', 'NIL'], yaEval(ya.parse("(foo)")[0])
+# deepEqual [1, 'NIL', 'NIL'], yaEval(ya.parse("(foo :a 1)")[0])
+# deepEqual ['NIL', 1, 'NIL'], yaEval(ya.parse("(foo :b 1)")[0])
+# deepEqual ['NIL', 'NIL', 1], yaEval(ya.parse("(foo :c 1)")[0])
+# deepEqual [1, 'NIL', 3], yaEval(ya.parse("(foo :a 1 :c 3)")[0])
+# deepEqual [1, 2, 3], yaEval(ya.parse("(foo :a 1 :b 2 :c 3)")[0])
+# deepEqual [1, 2, 3], yaEval(ya.parse("(foo :a 1 :c 3 :b 2)")[0])
+# 
+# yaEval(ya.parse("""(defun foo (&key ((:apple a)) ((:box b) 0) ((:charlie c) 0 c-supplied-p))
+#   (list a b c c-supplied-p))""")[0])
+#   
+# equal "(10 20 30 T)", desexpify yaEval(ya.parse("(foo :apple 10 :box 20 :charlie 30) ==> ")[0])
