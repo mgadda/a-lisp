@@ -1,14 +1,6 @@
 util = require 'util'
 {YaFunction} = require './function'
-
-desexpify = (sexp) ->
-  subexprs = [];
-  if(typeof(sexp) != 'object')
-    sexp;
-  else if sexp instanceof YaFunction
-    sexp.toString()
-  else
-    expr = '(' + sexp.map((s)-> desexpify(s)).join(' ') + ')' 
+{desexpify} = require './desexpify'
 
 exports.StackFrame = class StackFrame
 

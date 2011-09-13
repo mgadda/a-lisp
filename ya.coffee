@@ -3,6 +3,7 @@ fs = require 'fs'
 util = require 'util'
 
 {YaFunction} = require './function'
+{desexpify} = require './desexpify'
 
 yaParser = require('./ya_parser').parser
 
@@ -21,16 +22,6 @@ log = (msg, obj)->
   tabs = ""
   tabs += "  " for i in [0..stack.depth()]
   console.log tabs + msg + util.inspect(obj, false, 3)
-
-
-desexpify = (sexp) ->
-  subexprs = [];
-  if(typeof(sexp) != 'object')
-    sexp;
-  else if sexp instanceof YaFunction
-    sexp.toString()
-  else
-    expr = '(' + sexp.map((s)-> desexpify(s)).join(' ') + ')'
 
 
 env =
