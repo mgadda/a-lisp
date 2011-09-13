@@ -9,6 +9,7 @@ Prerequisites
 * nodejs
 * coffeescript
 * rlwrap (optional)
+* jison, if you want to make changes to the lexer/parser
 
 Starting the Ya REPL
 --------------------
