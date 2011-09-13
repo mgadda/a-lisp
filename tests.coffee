@@ -3,6 +3,11 @@ ya = require './ya'
 {ok, deepEqual, equal} = require 'assert'
 {YaFunction} = require './function'
 
+
+yaEval = (sexps)->
+  last = ya.stack.call(ya.eval, sexp) for sexp in sexps
+  last
+
 # Test Parser
 deepEqual [[]], ya.parse('()')
 deepEqual [[[]]], ya.parse('(())')
@@ -43,65 +48,62 @@ deepEqual a, ya.parse("`,(b)")[0]
 
 deepEqual ['BACKQUOTE', ['A', ['SPLICE', 'B'], 'C']], ya.parse("`(a ,@b c)")[0]
 
-yaEval = (sexp)->
-  ya.stack.call(ya.eval, sexp)
-
 # Eval'er
-equal 3, yaEval(ya.parse('(+ 1 2)')[0])
-equal 32, yaEval(ya.parse('(+ 1 #x1f)')[0])
-equal 1, yaEval(ya.parse('(+ 1 (+ -1 1))')[0])
+equal 3, yaEval(ya.parse('(+ 1 2)'))
+equal 32, yaEval(ya.parse('(+ 1 #x1f)'))
+equal 1, yaEval(ya.parse('(+ 1 (+ -1 1))'))
 
-equal Math.PI, yaEval(ya.parse('PI')[0])
-equal Math.E, yaEval(ya.parse('E')[0])
-equal 'T', yaEval(ya.parse('T')[0])
-equal 'NIL', yaEval(ya.parse('NIL')[0])
-equal 'NIL', yaEval(ya.parse('()')[0])
+equal Math.PI, yaEval(ya.parse('PI'))
+equal Math.E, yaEval(ya.parse('E'))
+equal 'T', yaEval(ya.parse('T'))
+equal 'NIL', yaEval(ya.parse('NIL'))
+equal 'NIL', yaEval(ya.parse('()'))
 
-equal 'A', yaEval(ya.parse('(quote a)')[0])
-deepEqual ['QUOTE', 'A'], yaEval(ya.parse('(quote (quote a))')[0])
-#deepEqual ['QUOTE', 'NIL'], yaEval(ya.parse("''()")[0])
+equal 'A', yaEval(ya.parse('(quote a)'))
+deepEqual ['QUOTE', 'A'], yaEval(ya.parse('(quote (quote a))'))
+#deepEqual ['QUOTE', 'NIL'], yaEval(ya.parse("''()"))
 
-equal 'A', yaEval(ya.parse("(car (quote (a b c)))")[0])
-equal 'A', yaEval(ya.parse("(car '(a b c))")[0])
-deepEqual ['B', 'C'], yaEval(ya.parse("(cdr '(a b c))")[0])
+equal 'A', yaEval(ya.parse("(car (quote (a b c)))"))
+equal 'A', yaEval(ya.parse("(car '(a b c))"))
+deepEqual ['B', 'C'], yaEval(ya.parse("(cdr '(a b c))"))
 
-equal 'NIL', yaEval(ya.parse("(car ())")[0])
-equal 'NIL', yaEval(ya.parse("'()")[0])
-equal 'NIL', yaEval(ya.parse("(car '())")[0])
-equal 'NIL', yaEval(ya.parse("(cdr ())")[0])
+equal 'NIL', yaEval(ya.parse("(car ())"))
+equal 'NIL', yaEval(ya.parse("'()"))
+equal 'NIL', yaEval(ya.parse("(car '())"))
+equal 'NIL', yaEval(ya.parse("(cdr ())"))
 
 # CONS
-deepEqual ['A', 'B', 'C'], yaEval(ya.parse('(cons (quote a) (quote (b c)))')[0])
-deepEqual [ 'A', 'B' ], yaEval(ya.parse("(cons 'a 'b)")[0])
-deepEqual [ [ 'A', 'B' ], 'B' ], yaEval(ya.parse("(cons '(a b) 'b)")[0])
-deepEqual [ [ 'A', 'B' ], 'B', 'C' ], yaEval(ya.parse("(cons '(a b) '(b c))")[0])
+deepEqual ['A', 'B', 'C'], yaEval(ya.parse('(cons (quote a) (quote (b c)))'))
+deepEqual [ 'A', 'B' ], yaEval(ya.parse("(cons 'a 'b)"))
+deepEqual [ [ 'A', 'B' ], 'B' ], yaEval(ya.parse("(cons '(a b) 'b)"))
+deepEqual [ [ 'A', 'B' ], 'B', 'C' ], yaEval(ya.parse("(cons '(a b) '(b c))"))
 
 # EQUAL
-deepEqual 'T', yaEval(ya.parse("(equal (car (quote (a b))) (quote a))")[0])
+deepEqual 'T', yaEval(ya.parse("(equal (car (quote (a b))) (quote a))"))
 # TODO: make equal a deep traversal of equality, not just javascript's === operator
-# deepEqual 'T', yaEval(ya.parse("(equal '(a b c) '(a b c))")[0])
-# deepEqual 'NIL', yaEval(ya.parse("(equal '(a b c) '(a b))")[0])
+# deepEqual 'T', yaEval(ya.parse("(equal '(a b c) '(a b c))"))
+# deepEqual 'NIL', yaEval(ya.parse("(equal '(a b c) '(a b))"))
 
 
 # ATOM
 
-deepEqual 'T', yaEval(ya.parse("(atom 'a)")[0])
-deepEqual 'NIL', yaEval(ya.parse("(atom '(a b))")[0])
-deepEqual 'T', yaEval(ya.parse("(atom (car '(a b)))")[0])
-deepEqual 'NIL', yaEval(ya.parse("(atom (cdr '(a b)))")[0])
+deepEqual 'T', yaEval(ya.parse("(atom 'a)"))
+deepEqual 'NIL', yaEval(ya.parse("(atom '(a b))"))
+deepEqual 'T', yaEval(ya.parse("(atom (car '(a b)))"))
+deepEqual 'NIL', yaEval(ya.parse("(atom (cdr '(a b)))"))
 
 # COND
-equal 'U', yaEval(ya.parse("(cond ('u))")[0])
-equal 'X', yaEval(ya.parse("(cond (t 'x))")[0])
-equal 'C', yaEval(ya.parse("(cond (t 'a 'b 'c))")[0])
-deepEqual ['B', 'C'], yaEval(ya.parse("(cond (t 'a '(b c)))")[0])
-equal 'B', yaEval(ya.parse('(cond ((atom (quote a)) (quote b)) ((quote t) (quote c)))')[0])
-equal 'A', yaEval(ya.parse("(cond ((atom '(a b)) t) ('a))")[0])
+equal 'U', yaEval(ya.parse("(cond ('u))"))
+equal 'X', yaEval(ya.parse("(cond (t 'x))"))
+equal 'C', yaEval(ya.parse("(cond (t 'a 'b 'c))"))
+deepEqual ['B', 'C'], yaEval(ya.parse("(cond (t 'a '(b c)))"))
+equal 'B', yaEval(ya.parse('(cond ((atom (quote a)) (quote b)) ((quote t) (quote c)))'))
+equal 'A', yaEval(ya.parse("(cond ((atom '(a b)) t) ('a))"))
 
 # LAMBDA 
-deepEqual 10, yaEval(ya.parse('((lambda (x) x) 10)')[0])
-equal 5, yaEval(ya.parse("((lambda (x y) (+ x y)) 2 3)")[0])
-deepEqual ['A', 'D'], yaEval(ya.parse("((lambda (x y) (cons (car x) y)) (quote (a b)) (cdr (quote (c d))))")[0])
+deepEqual 10, yaEval(ya.parse('((lambda (x) x) 10)'))
+equal 5, yaEval(ya.parse("((lambda (x y) (+ x y)) 2 3)"))
+deepEqual ['A', 'D'], yaEval(ya.parse("((lambda (x y) (cons (car x) y)) (quote (a b)) (cdr (quote (c d))))"))
 
 # LABEL and recursive functions
 equal 55, yaEval(ya.parse("""
@@ -109,30 +111,37 @@ equal 55, yaEval(ya.parse("""
   (cond ((equal x 0) 0) 
         ((equal x 1) 1) 
         (t (+ (fib (+ x -1)) (fib (+ x -2))))))) 10)
-""")[0])
+"""))
 
 # FUNCTION
-ok (yaEval(ya.parse('(function +)')[0]) instanceof YaFunction)
-equal '#<FUNCTION + (&rest values) >', yaEval(ya.parse('(function +)')[0])
+ok (yaEval(ya.parse('(function +)')) instanceof YaFunction)
+equal '#<FUNCTION + (&rest values) >', yaEval(ya.parse('(function +)'))
 
 # APPLY 
-equal 60, yaEval(ya.parse("(apply (function +) '(10 20 30))")[0])
-equal 11, yaEval(ya.parse("(apply (lambda (x) (+ x 1)) '(10))")[0])
-equal 34, yaEval(ya.parse("(apply #'+ 4 '(10 20))")[0])
+equal 60, yaEval(ya.parse("(apply (function +) '(10 20 30))"))
+equal 11, yaEval(ya.parse("(apply (lambda (x) (+ x 1)) '(10))"))
+equal 34, yaEval(ya.parse("(apply #'+ 4 '(10 20))"))
 
 # DEFUN
-yaEval(ya.parse("(defun sum-wonky (x y) (+ (+ x y) 1))")[0])
-equal 4, yaEval(ya.parse("(sum-wonky 1 2)")[0])
+yaEval(ya.parse("(defun sum-wonky (x y) (+ (+ x y) 1))"))
+equal 4, yaEval(ya.parse("(sum-wonky 1 2)"))
 
 # DOCUMENTATION
-yaEval(ya.parse('(defun sum-wonky (x y) "Add two numbers incorrectly" (+ (+ x y) 1))')[0])
-equal '"Add two numbers incorrectly"', yaEval(ya.parse("(documentation 'sum-wonky 'function)")[0])
+yaEval(ya.parse('(defun sum-wonky (x y) "Add two numbers incorrectly" (+ (+ x y) 1))'))
+equal '"Add two numbers incorrectly"', yaEval(ya.parse("(documentation 'sum-wonky 'function)"))
 
 # LIST
-deepEqual ['A', 'B', 'NIL', 'T'], yaEval(ya.parse("(list 'a 'b nil t)")[0])
+deepEqual ['A', 'B', 'NIL', 'T'], yaEval(ya.parse("(list 'a 'b nil t)"))
 
 # PROGN
-equal 'NIL', yaEval(ya.parse('(progn 1 2 3 ())')[0])
+equal 'NIL', yaEval(ya.parse('(progn 1 2 3 ())'))
+
+# COMMA
+equal 10, yaEval(ya.parse('(set \'a 10) `,a'))
+deepEqual ["B",10,"C"], yaEval(ya.parse('(set \'a 10) `(b ,a c)'))
+deepEqual ["B",["+", 10, 5],"C"], yaEval(ya.parse('(set \'a 10) `(b (+ ,a 5) c)'))
+deepEqual ["B",15,"C"], yaEval(ya.parse('(set \'a 10) `(b ,(+ a 5) c)'))
+
 # Optional Arguments
 # deepEqual [1, 2, 'NIL', 'NIL'], yaEval(ya.parse("((lambda (a b &optional c d) (list a b c d)) 1 2)")[0])
 
