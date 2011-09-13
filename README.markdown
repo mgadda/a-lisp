@@ -6,14 +6,17 @@ Ya is a toy lisp implemented in CoffeeScript which runs in NodeJS or in a browse
 Prerequisites
 -------------
 
-nodejs
-coffeescript
+* nodejs
+* coffeescript
+* rlwrap (optional)
 
 Starting the Ya REPL
 --------------------
-rlwrap coffee ya_repl.coffee
 
+`$ rlwrap coffee ya_repl.coffee`
 
 Running Tests
 -------------
-coffee tests.coffee
+
+`$ coffee tests.coffee`
+
