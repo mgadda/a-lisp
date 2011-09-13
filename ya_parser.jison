@@ -60,6 +60,17 @@ sexpression:  list                         { $$ = $list; }
                 }
                 
               %}
+  |           SPLICE sexpression            
+              %{
+                if(typeof($sexpression) == "object") {
+                  $sexpression.suppress_backquote_and_splice = true;
+                  $$ = $sexpression;
+                }
+                else {
+                  $$ = ['SPLICE', $sexpression]; 
+                }
+                
+              %}
   ;
       
 list:         '(' elements ')'             { $$ = $elements; }

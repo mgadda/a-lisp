@@ -33,10 +33,14 @@ deepEqual [['FUNCTION', 'A']], ya.parse("#'a")
 deepEqual ['LAMBDA', ['X'], 'X'], ya.parse('(lambda (x) x)')[0]
 deepEqual [['LAMBDA', ['X'], 'X'], 10], ya.parse('((lambda (x) x) 10)')[0]
 
-deepEqual ['A'], ya.parse("`a")[0]
-deepEqual ['QUOTE', ['A', 'B', 'C']], ya.parse("`(a b c)")[0]
+deepEqual ['BACKQUOTE', 'A'], ya.parse("`a")[0]
+deepEqual ['BACKQUOTE', ['A', 'B', 'C']], ya.parse("`(a b c)")[0]
 deepEqual ['BACKQUOTE', ['A', ['COMMA', 'B'], 'C']], ya.parse("`(a ,b c)")[0]
-deepEqual ['BACKQUOTE', ['A', ['COMMA', ['+', 'B', 1]], 'C']], ya.parse("`(a ,(+ b 1) c)")[0]
+
+a = ['BACKQUOTE', ['B']]
+a[1].suppress_backquote = true
+deepEqual a, ya.parse("`,(b)")[0]
+
 deepEqual ['BACKQUOTE', ['A', ['SPLICE', 'B'], 'C']], ya.parse("`(a ,@b c)")[0]
 
 yaEval = (sexp)->
