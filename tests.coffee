@@ -142,7 +142,31 @@ deepEqual ["B",10,"C"], yaEval(ya.parse('(set \'a 10) `(b ,a c)'))
 deepEqual ["B",["+", 10, 5],"C"], yaEval(ya.parse('(set \'a 10) `(b (+ ,a 5) c)'))
 deepEqual ["B",15,"C"], yaEval(ya.parse('(set \'a 10) `(b ,(+ a 5) c)'))
 
-# Optional Arguments
+# SPLICE (not yet implemented)
+# deepEqual ["A", "B", "C", "D"], yaEval(ya.parse('(set \'b \'(b c d)) `(a ,@b e)'))
+# deepEqual ["B", "C", "D", "E", "F"], yaEval(ya.parse('(set \'a \'(b c d)) `(,@(reverse a) e f)'))
+        
+
+# MACRO
+equal 100, yaEval ya.parse """
+(defmacro setq (symbol value)
+  `(set ',symbol ,value))
+(setq foo 100)
+foo
+"""  
+
+equal 'B', yaEval ya.parse """
+(defmacro setq (symbol value)
+  `(set ',symbol ,value))
+(defmacro setq-literal (place literal)
+     `(setq ,place ',literal))
+(setq-literal a b)
+a
+"""  
+
+
+
+# Optional Arguments (not yet implemented)
 # deepEqual [1, 2, 'NIL', 'NIL'], yaEval(ya.parse("((lambda (a b &optional c d) (list a b c d)) 1 2)")[0])
 
 # yaEval(ya.parse("(defun opt-test (a b &optional c d) (list a b c d))")[0])
@@ -150,22 +174,22 @@ deepEqual ["B",15,"C"], yaEval(ya.parse('(set \'a 10) `(b ,(+ a 5) c)'))
 # deepEqual [1, 2, 3, 'NIL'], yaEval(ya.parse("(opt-test 1 2 3)")[0])
 # deepEqual [1, 2, 3, 4], yaEval(ya.parse("(opt-test 1 2 3 4)")[0])
 # 
-# # Default values (of optional arguments)
+# # Default values (of optional arguments) (not yet implemented)
 # yaEval(ya.parse("(defun foo (a &optional (b 10)) (list a b))")[0])
 # deepEqual [1, 10], yaEval(ya.parse("(foo 1)")[0])
 # deepEqual [1, 2], yaEval(ya.parse("(foo 1 2)")[0])
 # 
-# # Default values with caller supplied flag
+# # Default values with caller supplied flag (not yet implemented)
 # yaEval(ya.parse("""(defun foo (a b &optional (c 3 c-supplied-p))
 #                      (list a b c c-supplied-p))""")[0])
 # deepEqual [1, 2, 3, "NIL"], yaEval(ya.parse("(foo 1 2)")[0])
 # deepEqual [1, 2, 3, 'T'], yaEval(ya.parse("(foo 1 2 3)")[0])
 # deepEqual [1, 2, 4, 'T'] yaEval(ya.parse("(foo 1 2 4)")[0])
 #   
-# # Rest parameters
+# # Rest parameters (not yet implemented)
 # deepEqual 15, yaEval(ya.parse("(defun test (a b &rest values) (apply #'+ a b values))"))
 # 
-# # Keyword parameters
+# # Keyword parameters (not yet implemented)
 # deepEqual ['NIL', 'NIL', 'NIL'], yaEval(ya.parse("(foo)")[0])
 # deepEqual [1, 'NIL', 'NIL'], yaEval(ya.parse("(foo :a 1)")[0])
 # deepEqual ['NIL', 1, 'NIL'], yaEval(ya.parse("(foo :b 1)")[0])

@@ -23,7 +23,6 @@ class Macro
       for idx in [0...args.length]
         @stackFrame.bind(@parameters[idx], args[idx]) 
       
-      console.log @macroBody
       ya.eval.call(@stackFrame, @macroBody)
 
 
