@@ -220,33 +220,7 @@ special_operators =
     this.previousFrame.bindFunc(value, symbol)
     
   DEFMACRO: (name, parameterNames, macroBody)->
-
-    macroObj = new Macro(name, parameterNames, macroBody, this)# , (args...)->
-    #       
-    #       tmp = []
-    #       tmp.push name
-    #       tmp = tmp.concat args
-    # 
-    #       console.log "#{stack.depth()-1}. Trace: #{desexpify(tmp)}" if (name in traces)      
-    # 
-    #       evaldMacroBody = this.stack.callBlock ->
-    #         # converts `(a ,b) into (a 10) if (b eq 10)
-    #         for idx in [0...args.length]
-    #           this.bind(parameterNames[idx], args[idx]) 
-    #         
-    #           
-    #         _eval.call(this, macroBody)
-    # 
-    #       console.log "#{stack.depth()-1}. Trace: #{name} ==> #{desexpify(evaldMacroBody)}" if (name in traces)
-    #       
-    #       # (+ x y) => error, if x and y aren't defined per normal evaluation rules
-    #       value = _eval.call(this, evaldMacroBody) # BUG: this shouldn't require .previousFrame, but it does
-    #       
-    #       
-    #       return value
-    #     )                                                   
-
-    this.previousFrame.bindFunc(macroObj)
+    this.previousFrame.bindFunc(new Macro(name, parameterNames, macroBody, this))
   
 # Always executed in the context of a StackFrame    
 __eval = (sexp) ->
