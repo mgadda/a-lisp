@@ -1,5 +1,5 @@
 util = require 'util'
-{YaFunction} = require './function'
+{ALFunction} = require './function'
 {desexpify} = require './desexpify'
 
 exports.StackFrame = class StackFrame

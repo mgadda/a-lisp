@@ -1,6 +1,6 @@
 {desexpify} = require './desexpify'
     
-class YaFunction
+class ALFunction
 
   constructor: (name, parameters, callable) ->
     @name = name
@@ -10,4 +10,4 @@ class YaFunction
   toString: ->
     "#<FUNCTION #{@name} #{desexpify(@parameters)} >"
     
-exports.YaFunction = YaFunction    
+exports.ALFunction = ALFunction    

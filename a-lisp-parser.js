@@ -1,5 +1,5 @@
 /* Jison generated parser */
-var ya_parser = (function(){
+var aLispParser = (function(){
 
 
 var parser = {trace: function trace() { },
@@ -419,8 +419,8 @@ parser.lexer = lexer;
 return parser;
 })();
 if (typeof require !== 'undefined' && typeof exports !== 'undefined') {
-exports.parser = ya_parser;
-exports.parse = function () { return ya_parser.parse.apply(ya_parser, arguments); }
+exports.parser = aLispParser;
+exports.parse = function () { return aLispParser.parse.apply(aLispParser, arguments); }
 exports.main = function commonjsMain(args) {
     if (!args[1])
         throw new Error('Usage: '+args[0]+' FILE');

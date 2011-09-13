@@ -1,7 +1,7 @@
 {desexpify} = require './desexpify'
-ya = require './ya'
+aLisp = require './a-lisp'
 
-class Macro
+class ALMacro
 
   constructor: (name, parameters, macroBody, stackFrame) ->
     @name = name
@@ -11,7 +11,7 @@ class Macro
     
     @callable = (args...) =>
       evaldMacroBody = this.expand(args...) # `(+ x y) => (+ x 1)
-      value = ya.eval.call(@stackFrame, evaldMacroBody) # (+ x 1) => (+ 2 1) if x = 2
+      value = aLisp.eval.call(@stackFrame, evaldMacroBody) # (+ x 1) => (+ 2 1) if x = 2
       return value  
       
   toString: ->
@@ -23,7 +23,7 @@ class Macro
       for idx in [0...args.length]
         @stackFrame.bind(@parameters[idx], args[idx]) 
       
-      ya.eval.call(@stackFrame, @macroBody)
+      aLisp.eval.call(@stackFrame, @macroBody)
 
 
-exports.Macro = Macro
+exports.ALMacro = ALMacro

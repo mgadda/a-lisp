@@ -1,17 +1,17 @@
 exports.splash = """
 
-Y     Y   A 
-Y     Y  A A
- Y   Y  A   A 
-  Y Y  A     A 
-   Y   AAAAAAA
-   Y   A     A
-   Y   A     A 
+_______         ______ _____                  
+___    |        ___  / ___(_)________________ 
+__  /| |__________  /  __  / __  ___/___  __ \
+_  ___ |_/_____/_  /____  /  _(__  ) __  /_/ /
+/_/  |_|        /_____//_/   /____/  _  .___/ 
+                                     /_/      
+                                        
 
-Welcome to Ya! 
+Welcome to A-Lisp! 
 We'll be brief so you can get on with it.
 
-http://ya-lang.org
+http://a-lisp.org
 
 Copyright (c) 2011 Matt Gadda
   

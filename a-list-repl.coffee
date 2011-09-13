@@ -1,5 +1,5 @@
 sys = require 'sys'
-ya = require './ya'
+aLisp = require './a-lisp'
 {splash} = require './splash'
 
 
@@ -25,11 +25,11 @@ read = ->
 
       try        
         # Eval each line in the context of a Stack frame
-        ya.print(ya.stack.call(ya.eval, sexp)) for sexp in ya.parse(input)
+        aLisp.print(aLisp.stack.call(aLisp.eval, sexp)) for sexp in aLisp.parse(input)
       catch e        
         console.log e
         console.log e.stack
-        # console.log e.yaStack if e.yaStack?
+        # console.log e.aLispStack if e.aLispStack?
       finally
         input = ""
         process.stdout.write "[#{line++}]> "

@@ -2,20 +2,20 @@ sys = require 'sys'
 fs = require 'fs' 
 util = require 'util'
 
-{YaFunction} = require './function'
-{Macro} = require './macro'
+{ALFunction} = require './function'
+{ALMacro} = require './macro'
 {desexpify} = require './desexpify'
 
-yaParser = require('./ya_parser').parser
+aLispParser = require('./a-lisp-parser').parser
 
 {Stack, StackFrame} = require './stack'  
 
 parse = (str) ->
   ret = null
-  yaParser.yy.record = (sexp) ->
+  aLispParser.yy.record = (sexp) ->
     ret = sexp
     
-  yaParser.parse(str)
+  aLispParser.parse(str)
   
   ret
 
@@ -33,12 +33,12 @@ env =
     E: Math.E
   funcs:
     
-    '+': new YaFunction( '+', ['&rest','values'], (args...)->
+    '+': new ALFunction( '+', ['&rest','values'], (args...)->
       sum = 0
       sum += arg for arg in args when typeof arg == 'number'
       sum
     )
-    CONS: new YaFunction('CONS', ['first','&rest','values'], (first, rest)->
+    CONS: new ALFunction('CONS', ['first','&rest','values'], (first, rest)->
       throw {message: "wrong number of arguments to CONS"} if arguments.length != 2
     
       if rest instanceof Array
@@ -48,21 +48,21 @@ env =
 
       rest
     )
-    EQUAL: new YaFunction('EQUAL', ['left', 'right'], (left, right)->
+    EQUAL: new ALFunction('EQUAL', ['left', 'right'], (left, right)->
       return 'T' if left == right
       'NIL'
     )
-    DOCUMENTATION: new YaFunction('DOCUMENTATION', ['name', 'type'], (name, type)->
+    DOCUMENTATION: new ALFunction('DOCUMENTATION', ['name', 'type'], (name, type)->
       return documentation[type][name] if documentation[type]?
       'NIL'
     )
-    LIST: new YaFunction('LIST', ['&rest', 'values'], (args...)->
+    LIST: new ALFunction('LIST', ['&rest', 'values'], (args...)->
       args
     )
-    APPLY: new YaFunction('APPLY', ['function', '&rest', 'values'], (funcObj, args...)->
-      # accepts YaFunction, then lose arguments followed by a list
-      # everything after YaFunction gets flattened and applied to YaFunction
-      throw {message: "APPLY: undefined function #{desexpify(funcObj)}"} if funcObj not instanceof YaFunction
+    APPLY: new ALFunction('APPLY', ['function', '&rest', 'values'], (funcObj, args...)->
+      # accepts ALFunction, then lose arguments followed by a list
+      # everything after ALFunction gets flattened and applied to ALFunction
+      throw {message: "APPLY: undefined function #{desexpify(funcObj)}"} if funcObj not instanceof ALFunction
 
       argsToApply = []
       for arg in args
@@ -77,7 +77,7 @@ env =
       return funcObj.callable.apply(this, argsToApply)
       #return stack.call(funcObj.callable, argsToApply...)
     )
-    REVERSE: new YaFunction('REVERSE', ['list'], (list) ->
+    REVERSE: new ALFunction('REVERSE', ['list'], (list) ->
       if list.length == 0 || list == "NIL"
         return 'NIL'
 
@@ -86,7 +86,7 @@ env =
         
       list.reverse()
     )
-    MACROEXPAND: new YaFunction('MACROEXPAND', ['macro'], (macro)->
+    MACROEXPAND: new ALFunction('MACROEXPAND', ['macro'], (macro)->
       this.getFunc(macro[0]).expand(macro)
       
     )
@@ -134,7 +134,7 @@ special_operators =
   LAMBDA: (parameterNames, body...)->
     # replace body's references to strings defined in parameterNames array
     # with arguments passed into resulting javascript function
-    new YaFunction('LAMBDA', parameterNames, (args...)->
+    new ALFunction('LAMBDA', parameterNames, (args...)->
       #log "lambda invocation arg values: ", args
       for idx in [0...args.length]
         this.bind(parameterNames[idx], args[idx]) 
@@ -167,7 +167,7 @@ special_operators =
   LABEL: (name, lambda)->
     lambdaFuncObj = _eval.call(this, lambda)
     
-    new YaFunction(name, lambdaFuncObj.parameters, (args...)->
+    new ALFunction(name, lambdaFuncObj.parameters, (args...)->
       # Bind this function so that it can be called by name (within scope such as down below)
       lambdaFuncObj.name = name
       this.bindFunc(lambdaFuncObj)
@@ -220,7 +220,7 @@ special_operators =
     this.previousFrame.bindFunc(value, symbol)
     
   DEFMACRO: (name, parameterNames, macroBody)->
-    this.previousFrame.bindFunc(new Macro(name, parameterNames, macroBody, this))
+    this.previousFrame.bindFunc(new ALMacro(name, parameterNames, macroBody, this))
   
 # Always executed in the context of a StackFrame    
 __eval = (sexp) ->
@@ -254,10 +254,10 @@ __eval = (sexp) ->
     # failing that, eval first item in list, must eval to function (e.g. (lambda (x) x))
     funcObj = this.getFunc(sexp[0]) || _eval.call(this, sexp[0])
     func = funcObj.callable if funcObj?
-    throw {message: "EVAL: undefined function #{sexp[0]}", yaStack: util.inspect(stack, false, 3)} unless func? and (typeof(func) == 'function')
+    throw {message: "EVAL: undefined function #{sexp[0]}", aLispStack: util.inspect(stack, false, 3)} unless func? and (typeof(func) == 'function')
     
     # eval its parts, apply the function to them
-    if funcObj instanceof YaFunction
+    if funcObj instanceof ALFunction
       args = (_eval.call(this, arg) for arg in sexp[1..])
 
       tmp = []
@@ -268,7 +268,7 @@ __eval = (sexp) ->
       value = stack.call(func, args...)
       console.log "#{stack.depth()-1}. Trace: #{sexp[0]} ==> #{value}" if (sexp[0] in traces)
 
-    else if funcObj instanceof Macro
+    else if funcObj instanceof ALMacro
       value = func.apply(this, sexp[1..])
     else
       throw {message: "this should not have happened."}
@@ -290,7 +290,7 @@ __eval = (sexp) ->
       return sexp
     else if (typeof(sexp) == 'string' and sexp.match(/\"[^\"]*\"/)) 
       return sexp
-    else if typeof sexp == 'number' # this is bad because it ties ya literals to js literals
+    else if typeof sexp == 'number' # this is bad because it ties A-Lisp literals to js literals
       return sexp
       
     throw {message: "variable #{desexpify(sexp)} has no value"}
