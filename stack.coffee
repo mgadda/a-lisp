@@ -31,15 +31,19 @@ exports.StackFrame = class StackFrame
     #console.log "BIND: #{name}, #{desexpify(value)} @ #{@stack.depth()}"
     @bindings[name] = value
   
-  bindFunc: (funcObj)->
-    @funcBindings[funcObj.name] = funcObj
+  bindFunc: (funcObj, name=null)->
+    #console.log "BINDFUNC: #{funcObj.name}, #{desexpify(funcObj)} @ #{@stack.depth()}"
+    @funcBindings[name || funcObj.name] = funcObj
+    name || funcObj.name
     
   toString: (recursive=false)->
     console.log "----------------------------------------"
-    for name,value of @bindings        
+    console.log "| VARIABLES"
+    for name,value of @bindings
       console.log "| #{name}\t\t\t| #{value}"
 
-    for name,value of @funcBindings        
+    console.log "| FUNCTIONS"
+    for name,value of @funcBindings      
       console.log "| #{name}\t\t\t| #{value.toString()}"
       
     @previousFrame.toString() if recursive && @previousFrame?
@@ -48,7 +52,9 @@ exports.StackFrame = class StackFrame
 exports.Stack = class Stack
 
   constructor: (initialEnv) ->
-    @frames = [new StackFrame(null, initialEnv)]
+    initialFrame = new StackFrame(null, initialEnv)
+    initialFrame.stack = this
+    @frames = [initialFrame]
   
   call: (func, args...)->
     try
@@ -56,7 +62,15 @@ exports.Stack = class Stack
     finally
       @frames.shift() #unless @frames.length == 1
       
-    return val;
+    return val
+
+  callBlock: (func)->
+    try
+      val = func.call(this.newFrame())
+    finally
+      @frames.shift()
+    
+    return val
     
   newFrame: ->
     frame = new StackFrame(@frames[0])

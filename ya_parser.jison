@@ -4,6 +4,9 @@
 ";".*                   {/* comment */}
 "#'"                    {return 'FUNCTION';}
 "'"                     {return 'SINGLE_QUOTE';}
+"`"                     {return 'BACKQUOTE';}
+","+"@"                 {return 'SPLICE';}
+","+                    {return 'COMMA';}
 "("                     {return '(';}
 ")"                     {return ')';}
 [-+]?[0-9]+\.[0-9]*     {return 'FLOAT';}           
@@ -41,13 +44,25 @@ sexpressions:     sexpression              { $$ = [$1]; yy.record($$); }
   |               sexpressions sexpression { $$ = $1; $$.push($2); yy.record($$); }
   ;
   
-sexpression:  list                         { $$ = $1; }
-  |           atom                         { $$ = $1; }
-  |           SINGLE_QUOTE sexpression     { $$ = ['QUOTE', $2];}
-  |           FUNCTION sexpression         { $$ = ['FUNCTION', $2];}
+sexpression:  list                         { $$ = $list; }
+  |           atom                         { $$ = $atom; }
+  |           SINGLE_QUOTE sexpression     { $$ = ['QUOTE', $sexpression]; }
+  |           FUNCTION sexpression         { $$ = ['FUNCTION', $sexpression]; }
+  |           BACKQUOTE sexpression        { $$ = ['BACKQUOTE', $sexpression]; }
+  |           COMMA sexpression            
+              %{
+                if(typeof($sexpression) == "object") {
+                  $sexpression.suppress_backquote = true;
+                  $$ = $sexpression;
+                }
+                else {
+                  $$ = ['COMMA', $sexpression]; 
+                }
+                
+              %}
   ;
-    
-list:         '(' elements ')'             { $$ = $2; }
+      
+list:         '(' elements ')'             { $$ = $elements; }
   |           '(' ')'                      { $$ = []; }
   ;
 

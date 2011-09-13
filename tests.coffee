@@ -33,6 +33,12 @@ deepEqual [['FUNCTION', 'A']], ya.parse("#'a")
 deepEqual ['LAMBDA', ['X'], 'X'], ya.parse('(lambda (x) x)')[0]
 deepEqual [['LAMBDA', ['X'], 'X'], 10], ya.parse('((lambda (x) x) 10)')[0]
 
+deepEqual ['A'], ya.parse("`a")[0]
+deepEqual ['QUOTE', ['A', 'B', 'C']], ya.parse("`(a b c)")[0]
+deepEqual ['BACKQUOTE', ['A', ['COMMA', 'B'], 'C']], ya.parse("`(a ,b c)")[0]
+deepEqual ['BACKQUOTE', ['A', ['COMMA', ['+', 'B', 1]], 'C']], ya.parse("`(a ,(+ b 1) c)")[0]
+deepEqual ['BACKQUOTE', ['A', ['SPLICE', 'B'], 'C']], ya.parse("`(a ,@b c)")[0]
+
 yaEval = (sexp)->
   ya.stack.call(ya.eval, sexp)
 
@@ -61,7 +67,7 @@ equal 'NIL', yaEval(ya.parse("(car '())")[0])
 equal 'NIL', yaEval(ya.parse("(cdr ())")[0])
 
 # CONS
-deepEqual ['A', 'B', 'C'], yaEval(ya.parse('(cons (quote a) (quote (b c))) = (a b c)')[0])
+deepEqual ['A', 'B', 'C'], yaEval(ya.parse('(cons (quote a) (quote (b c)))')[0])
 deepEqual [ 'A', 'B' ], yaEval(ya.parse("(cons 'a 'b)")[0])
 deepEqual [ [ 'A', 'B' ], 'B' ], yaEval(ya.parse("(cons '(a b) 'b)")[0])
 deepEqual [ [ 'A', 'B' ], 'B', 'C' ], yaEval(ya.parse("(cons '(a b) '(b c))")[0])
@@ -121,6 +127,8 @@ equal '"Add two numbers incorrectly"', yaEval(ya.parse("(documentation 'sum-wonk
 # LIST
 deepEqual ['A', 'B', 'NIL', 'T'], yaEval(ya.parse("(list 'a 'b nil t)")[0])
 
+# PROGN
+equal 'NIL', yaEval(ya.parse('(progn 1 2 3 ())')[0])
 # Optional Arguments
 # deepEqual [1, 2, 'NIL', 'NIL'], yaEval(ya.parse("((lambda (a b &optional c d) (list a b c d)) 1 2)")[0])
 

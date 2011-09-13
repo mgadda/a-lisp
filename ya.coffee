@@ -3,6 +3,7 @@ fs = require 'fs'
 util = require 'util'
 
 {YaFunction} = require './function'
+{Macro} = require './macro'
 {desexpify} = require './desexpify'
 
 yaParser = require('./ya_parser').parser
@@ -72,11 +73,24 @@ env =
       # big surprise here...
       # we make a raw method invocatio here, because the stack
       # was already pushed when APPLY was invoked, so there's no need to make
-      # the call on the stack, we can use the existing stack frame.
-      debugger      
+      # the call on the stack, we can use the existing stack frame.     
       return funcObj.callable.apply(this, argsToApply)
       #return stack.call(funcObj.callable, argsToApply...)
-    ) 
+    )
+    REVERSE: new YaFunction('REVERSE', ['list'], (list) ->
+      if list.length == 0 || list == "NIL"
+        return 'NIL'
+
+      if list not instanceof Array
+        throw {message: "REVERSE: #{desexpify(list)} is not a SEQUENCE"}
+        
+      list.reverse()
+    )
+    MACROEXPAND: new YaFunction('MACROEXPAND', ['macro'], (macro)->
+      this.getFunc(macro[0]).expand(macro)
+      
+    )
+
 stack = new Stack(env)
 traces = []
 documentation = {}  
@@ -86,6 +100,20 @@ special_operators =
   QUOTE: (arg)->
     return 'NIL' if arg.length == 0
     arg
+
+  BACKQUOTE: (sexp)->
+    return 'NIL' if sexp.length == 0
+
+    if(sexp instanceof Array) && sexp.length > 0
+      if sexp[0] == 'COMMA' # ,a
+        _eval.call(this, sexp[1])
+      else if sexp.suppress_backquote? && sexp.suppress_backquote # ,(a b c)
+        _eval.call(this, sexp)
+      else  # no suppression at this level (a b c)
+        (special_operators.BACKQUOTE.call(this, s) for s in sexp)
+    else
+      sexp
+    
   CAR: (arg)->
     car = _eval.call(this, arg)
     throw {message: "CAR: #{util.inspect(arg)} is not a list"} unless (car instanceof Array || car == 'NIL')
@@ -106,7 +134,7 @@ special_operators =
   LAMBDA: (parameterNames, body...)->
     # replace body's references to strings defined in parameterNames array
     # with arguments passed into resulting javascript function
-    new YaFunction('ANONYMOUS', parameterNames, (args...)->
+    new YaFunction('LAMBDA', parameterNames, (args...)->
       #log "lambda invocation arg values: ", args
       for idx in [0...args.length]
         this.bind(parameterNames[idx], args[idx]) 
@@ -173,10 +201,53 @@ special_operators =
     else
       throw {message: "FUNCTION: undefined function #{name}"}
         
-  "PRINT-STACK": ->
+  "PRINT-STACK": ->    
     this.toString(true)
     'NIL'
+  PROGN: (exprs...) ->
+    last = _eval.call(this, expr) for expr in exprs
+    last
+  SET: (symbol, value)->
+    symbol = _eval.call(this, symbol)
+    value = _eval.call(this, value)
+    
+    this.previousFrame.bind(symbol, value)
+    value
+  SETFUN: (symbol, value)->
+    symbol = _eval.call(this, symbol)
+    value = _eval.call(this, value)
+    
+    this.previousFrame.bindFunc(value, symbol)
+    
+  DEFMACRO: (name, parameterNames, macroBody)->
 
+    macroObj = new Macro(name, parameterNames, macroBody, this)# , (args...)->
+    #       
+    #       tmp = []
+    #       tmp.push name
+    #       tmp = tmp.concat args
+    # 
+    #       console.log "#{stack.depth()-1}. Trace: #{desexpify(tmp)}" if (name in traces)      
+    # 
+    #       evaldMacroBody = this.stack.callBlock ->
+    #         # converts `(a ,b) into (a 10) if (b eq 10)
+    #         for idx in [0...args.length]
+    #           this.bind(parameterNames[idx], args[idx]) 
+    #         
+    #           
+    #         _eval.call(this, macroBody)
+    # 
+    #       console.log "#{stack.depth()-1}. Trace: #{name} ==> #{desexpify(evaldMacroBody)}" if (name in traces)
+    #       
+    #       # (+ x y) => error, if x and y aren't defined per normal evaluation rules
+    #       value = _eval.call(this, evaldMacroBody) # BUG: this shouldn't require .previousFrame, but it does
+    #       
+    #       
+    #       return value
+    #     )                                                   
+
+    this.previousFrame.bindFunc(macroObj)
+  
 # Always executed in the context of a StackFrame    
 __eval = (sexp) ->
   throw {message: "this (#{util.inspect(this, false, 2)}) is not instanceof StackFrame"} if !(this instanceof StackFrame)
@@ -204,10 +275,7 @@ __eval = (sexp) ->
 
       return value
     
-    # Macros
-    # Not Yet Implemented :(
-    
-    # Regular Functions
+    # Macros & Regular Functions
     # look for method named in sexp[0] in stack (e.g. foo)
     # failing that, eval first item in list, must eval to function (e.g. (lambda (x) x))
     funcObj = this.getFunc(sexp[0]) || _eval.call(this, sexp[0])
@@ -215,15 +283,21 @@ __eval = (sexp) ->
     throw {message: "EVAL: undefined function #{sexp[0]}", yaStack: util.inspect(stack, false, 3)} unless func? and (typeof(func) == 'function')
     
     # eval its parts, apply the function to them
-    evald_args = (_eval.call(this, arg) for arg in sexp[1..])
+    if funcObj instanceof YaFunction
+      args = (_eval.call(this, arg) for arg in sexp[1..])
+
+      tmp = []
+      tmp.push sexp[0]
+      tmp = tmp.concat args
     
-    tmp = []
-    tmp.push sexp[0]
-    tmp = tmp.concat evald_args
-    
-    console.log "#{stack.depth()-1}. Trace: #{desexpify(tmp)}" if (sexp[0] in traces)
-    value = stack.call(func, evald_args...)
-    console.log "#{stack.depth()-1}. Trace: #{sexp[0]} ==> #{value}" if (sexp[0] in traces)
+      console.log "#{stack.depth()-1}. Trace: #{desexpify(tmp)}" if (sexp[0] in traces)
+      value = stack.call(func, args...)
+      console.log "#{stack.depth()-1}. Trace: #{sexp[0]} ==> #{value}" if (sexp[0] in traces)
+
+    else if funcObj instanceof Macro
+      value = func.apply(this, sexp[1..])
+    else
+      throw {message: "this should not have happened."}
     return value
     
   else # its an atom form
