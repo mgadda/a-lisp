@@ -39,8 +39,8 @@ env =
       sum
     )
     '-': new ALFunction( '-', ['&rest','values'], (args...)->
-      sum = 0
-      sum -= arg for arg in args when typeof arg == 'number'
+      sum = args[0]
+      sum -= arg for arg in args[1..] when typeof arg == 'number'
       sum
     )
     '*': new ALFunction( '*', ['&rest','values'], (args...)->
