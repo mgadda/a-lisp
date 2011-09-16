@@ -5,7 +5,7 @@ aLisp = require './a-lisp'
 
 
 aLispEval = (sexps)->
-  last = aLisp.stack.call(aLisp.eval, sexp) for sexp in sexps
+  last = aLisp.eval.call(aLisp.stack.currentFrame, sexp) for sexp in sexps
   last
 
 # Test Parser
@@ -123,8 +123,14 @@ equal 11, aLispEval(aLisp.parse("(apply (lambda (x) (+ x 1)) '(10))"))
 equal 34, aLispEval(aLisp.parse("(apply #'+ 4 '(10 20))"))
 
 # DEFUN
-aLispEval(aLisp.parse("(defun sum-wonky (x y) (+ (+ x y) 1))"))
-equal 4, aLispEval(aLisp.parse("(sum-wonky 1 2)"))
+equal 4, aLispEval(aLisp.parse("(defun sum-wonky (x y) (+ (+ x y) 1)) (sum-wonky 1 2)"))
+# equal 55, aLispEval(aLisp.parse("""
+# (defun fib (x) 
+#   (cond ((equal x 0) 0) 
+#         ((equal x 1) 1) 
+#         (+ (fib (- x 1)) (fib (- x 1)))))
+# (fib 10)
+# """))
 
 # DOCUMENTATION
 aLispEval(aLisp.parse('(defun sum-wonky (x y) "Add two numbers incorrectly" (+ (+ x y) 1))'))

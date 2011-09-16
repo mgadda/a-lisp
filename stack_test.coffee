@@ -18,9 +18,11 @@ equal 40, new StackFrame(@environments[0]).get('c')
 stack = new Stack({vars: {e: 50}})
 myfun = (x)->
   equal 50, this.get('e')
+  # equal 1, stack.depth()
 
+equal 0, stack.depth()
 stack.call(myfun, 10)
-equal 1, stack.depth()
+equal 0, stack.depth()
 
 # Test variable shadowing
 

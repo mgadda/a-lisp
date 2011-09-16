@@ -25,11 +25,12 @@ read = ->
 
       try        
         # Eval each line in the context of a Stack frame
-        aLisp.print(aLisp.stack.call(aLisp.eval, sexp)) for sexp in aLisp.parse(input)
+        aLisp.print(aLisp.eval.call(aLisp.stack.currentFrame, sexp)) for sexp in aLisp.parse(input)
+        #aLisp.print(aLisp.stack.call(aLisp.eval, sexp)) for sexp in aLisp.parse(input)
       catch e        
-        console.log e
-        console.log e.stack
-        # console.log e.aLispStack if e.aLispStack?
+        console.log e.message
+        console.log e.stack if e.stack?
+        console.log e.aLispStack if e.aLispStack?
       finally
         input = ""
         process.stdout.write "[#{line++}]> "

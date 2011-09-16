@@ -37,12 +37,15 @@ exports.StackFrame = class StackFrame
     name || funcObj.name
     
   toString: (recursive=false)->
-    console.log "----------------------------------------"
-    console.log "| VARIABLES"
+    console.log "|--------------------------------------"
+    console.log "|  VARIABLES @ #{@depth}"
+    console.log "|--------------------------------------"    
     for name,value of @bindings
       console.log "| #{name}\t\t\t| #{value}"
-
-    console.log "| FUNCTIONS"
+    
+    console.log "|--------------------------------------"
+    console.log "| FUNCTIONS @ #{@depth}"
+    console.log "|--------------------------------------"
     for name,value of @funcBindings      
       console.log "| #{name}\t\t\t| #{value.toString()}"
       
@@ -52,34 +55,38 @@ exports.StackFrame = class StackFrame
 exports.Stack = class Stack
 
   constructor: (initialEnv) ->
-    initialFrame = new StackFrame(null, initialEnv)
-    initialFrame.stack = this
-    @frames = [initialFrame]
-  
+    @currentFrame = new StackFrame(null, initialEnv)
+    @frames = 1
+    
+    @currentFrame.stack = this
+    @currentFrame.depth = this.depth()
+    
   call: (func, args...)->
     try
       val = func.apply(this.newFrame(), args)
-    finally
-      @frames.shift() #unless @frames.length == 1
+    finally      
+      @currentFrame = @currentFrame.previousFrame
+      @frames -= 1        
       
     return val
 
   callBlock: (func)->
     try
-      val = func.call(this.newFrame())
+      frame = this.newFrame()
+      val = func.call(frame, frame)
     finally
-      @frames.shift()
-    
+      @currentFrame = @currentFrame.previousFrame
+      @frames -= 1
+      
     return val
     
   newFrame: ->
-    frame = new StackFrame(@frames[0])
-    frame.stack = this
-    @frames.unshift(frame)
-    return frame
+    @currentFrame = new StackFrame(@currentFrame)
+    @frames += 1          
+    @currentFrame.stack = this 
+    @currentFrame.depth = this.depth()
     
-  currentFrame: ->
-    @frames[0]
+    return @currentFrame
     
   depth: ->
-    @frames.length
+    @frames-1 # 0-based

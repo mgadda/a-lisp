@@ -87,7 +87,7 @@ env =
       list.reverse()
     )
     MACROEXPAND: new ALFunction('MACROEXPAND', ['macro'], (macro)->
-      this.getFunc(macro[0]).expand(macro)
+      this.getFunc(macro[0]).expand(macro[1..]...)
       
     )
 
@@ -183,7 +183,7 @@ special_operators =
     documentation.FUNCTION[name] = body[0] if typeof(body[0]) == 'string'
     funcObj = _eval.call(this, ['LAMBDA', parameterNames, body...])
     funcObj.name = name # otherwise, it would be anonmyous, since we're just using lambda internally
-    this.previousFrame.bindFunc(funcObj)
+    this.bindFunc(funcObj)
     name    
       
   TRACE: (funcNames...) ->
@@ -211,16 +211,16 @@ special_operators =
     symbol = _eval.call(this, symbol)
     value = _eval.call(this, value)
     
-    this.previousFrame.bind(symbol, value)
+    this.bind(symbol, value)
     value
   SETFUN: (symbol, value)->
     symbol = _eval.call(this, symbol)
     value = _eval.call(this, value)
     
-    this.previousFrame.bindFunc(value, symbol)
+    this.bindFunc(value, symbol)
     
   DEFMACRO: (name, parameterNames, macroBody)->
-    this.previousFrame.bindFunc(new ALMacro(name, parameterNames, macroBody, this))
+    this.bindFunc(new ALMacro(name, parameterNames, macroBody, this))
   
 # Always executed in the context of a StackFrame    
 __eval = (sexp) ->
@@ -301,13 +301,11 @@ __eval = (sexp) ->
 _eval =(sexp) ->
   #console.log "EVAL: #{desexpify(sexp)}"
   ret = __eval.call(this, sexp)
-  #console.log "==> #{desexpify(ret)}"  #util.inspect(sexp)
-  #log "RETURN: ",  #util.inspect(ret)
+  #console.log "==> #{desexpify(ret)}"
   return ret
   
 print = (sexp)  ->
   console.log desexpify(sexp)
-  #console.log util.inspect(sexp, false, 4)
   
 quote = (expr) ->
   expr
