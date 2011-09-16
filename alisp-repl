@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rlwrap coffee a-list-repl.coffee
+rlwrap coffee a-lisp-repl.coffee
