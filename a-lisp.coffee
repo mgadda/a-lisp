@@ -260,14 +260,14 @@ __eval = (sexp) ->
     
     if specialFunc?
 
-      console.log "#{stack.depth()-1}. Trace: #{desexpify(sexp, sexp[1..])}" if (sexp[0] in traces)
+      console.log "#{stack.depth()}. Trace: #{desexpify(sexp, sexp[1..])}" if (sexp[0] in traces)
 
       # note that the call stack does not get pushed here
       # that left up to the special operator to handle if needed
       # in this way, special operators have access to the current stack frame
       # where as regular functions do not
       value = specialFunc.apply(this, sexp[1..]) # no eval, let special operator handle that
-      console.log "#{stack.depth()-1}. Trace: #{sexp[0]} ==> #{value}" if (sexp[0] in traces)
+      console.log "#{stack.depth()}. Trace: #{sexp[0]} ==> #{value}" if (sexp[0] in traces)
 
       return value
     
@@ -286,9 +286,9 @@ __eval = (sexp) ->
       tmp.push sexp[0]
       tmp = tmp.concat args
     
-      console.log "#{stack.depth()-1}. Trace: #{desexpify(tmp)}" if (sexp[0] in traces)
+      console.log "#{stack.depth()}. Trace: #{desexpify(tmp)}" if (sexp[0] in traces)
       value = stack.call(func, args...)
-      console.log "#{stack.depth()-1}. Trace: #{sexp[0]} ==> #{value}" if (sexp[0] in traces)
+      console.log "#{stack.depth()}. Trace: #{sexp[0]} ==> #{value}" if (sexp[0] in traces)
 
     else if funcObj instanceof ALMacro
       value = func.apply(this, sexp[1..])
