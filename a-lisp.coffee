@@ -38,6 +38,28 @@ env =
       sum += arg for arg in args when typeof arg == 'number'
       sum
     )
+    '-': new ALFunction( '-', ['&rest','values'], (args...)->
+      sum = 0
+      sum -= arg for arg in args when typeof arg == 'number'
+      sum
+    )
+    '*': new ALFunction( '*', ['&rest','values'], (args...)->
+      sum = 1
+      sum *= arg for arg in args when typeof arg == 'number'
+      sum
+    )
+    '<': new ALFunction( '<', ['&rest','values'], (args...)->
+        
+      prev = args[0]
+      for arg in args[1..]
+        if prev >= arg
+          return 'NIL'
+        else
+          prev = arg 
+
+      return 'T'
+    )
+    # TODO: implement lispy division, reduce fractions but don't return floating point values
     CONS: new ALFunction('CONS', ['first','&rest','values'], (first, rest)->
       throw {message: "wrong number of arguments to CONS"} if arguments.length != 2
     
