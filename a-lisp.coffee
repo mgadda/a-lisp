@@ -59,6 +59,20 @@ env =
 
       return 'T'
     )
+    '/': new ALFunction('/', ['numerator','denominator'], (numerator, denominator)->
+      if parseInt(numerator)==numerator && parseInt(denominator)==denominator
+        gcd = _eval.call(this, ['GCD', numerator, denominator])
+      
+        numerator /= gcd
+        denominator /= gcd
+      
+        if denominator > 1
+          return [numerator, denominator]
+        else
+          return numerator
+      else
+        return numerator/denominator
+    )
     # TODO: implement lispy division, reduce fractions but don't return floating point values
     CONS: new ALFunction('CONS', ['first','&rest','values'], (first, rest)->
       throw {message: "wrong number of arguments to CONS"} if arguments.length != 2
