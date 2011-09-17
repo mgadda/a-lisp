@@ -166,7 +166,8 @@ special_operators =
     
     if cdr instanceof Array and cdr.length > 0
       return cdr[1..]
-
+  
+  # TODO: make (apply ((lambda (n) (lambda (x) (+ x n))) 10) '(20)) properly close over n.
   LAMBDA: (parameterNames, body...)->
     # replace body's references to strings defined in parameterNames array
     # with arguments passed into resulting javascript function
@@ -228,7 +229,9 @@ special_operators =
       traces = traces.concat(funcName) for funcName in funcNames when (funcName not in traces)
       funcNames
     else
-      traces
+      traces  
+  
+  # TODO: fix this implementation, its not even remotely correct
   FUNCTION: (name)->
     # convert name to functor (typeof == function)
     funcObj = this.getFunc(name)
@@ -300,7 +303,7 @@ __eval = (sexp) ->
     
     # Macros & Regular Functions
     # look for method named in sexp[0] in stack (e.g. foo)
-    # failing that, eval first item in list, must eval to function (e.g. (lambda (x) x))
+    # failing that, eval first item in list, must return function (e.g. (lambda (x) x))
     funcObj = this.getFunc(sexp[0]) || _eval.call(this, sexp[0])
     func = funcObj.callable if funcObj?
     throw {message: "EVAL: undefined function #{sexp[0]}", aLispStack: util.inspect(stack, false, 3)} unless func? and (typeof(func) == 'function')
