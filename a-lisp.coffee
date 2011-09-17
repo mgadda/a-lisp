@@ -258,6 +258,17 @@ special_operators =
   DEFMACRO: (name, parameterNames, macroBody)->
     this.bindFunc(new ALMacro(name, parameterNames, macroBody, this))
   
+  RPLACA: (place, value)->
+    if typeof(place) == 'string'
+      # its an atom (rplaca my-list 10)
+      # modify the value in place
+      this.get(place)[0] = value 
+    # else
+    #       # its something fancier like (rplaca (cdr my-list) 10)
+    #       # figure out how to get By reference return value from _eval
+    #       _eval.call(this, place) 
+
+
 # Always executed in the context of a StackFrame    
 __eval = (sexp) ->
   throw {message: "this (#{util.inspect(this, false, 2)}) is not instanceof StackFrame"} if !(this instanceof StackFrame)
