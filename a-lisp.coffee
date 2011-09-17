@@ -247,6 +247,8 @@ special_operators =
     symbol = _eval.call(this, symbol)
     value = _eval.call(this, value)
     
+    throw {message: "#{desexpify(symbol)} is not a symbol"} if typeof(symbol) != 'string'
+    
     this.bind(symbol, value)
     value
   SETFUN: (symbol, value)->
